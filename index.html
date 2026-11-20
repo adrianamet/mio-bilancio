@@ -18,7 +18,6 @@
       --green: #22c55e;
       --red: #ef4444;
       --orange: #f59e0b;
-      --purple: #a855f7;
       --border: #334155;
     }
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -26,8 +25,9 @@
       margin: 0; padding: env(safe-area-inset-top) 14px 85px 14px;
       background: var(--bg); color: var(--text);
     }
-    h1 { font-size: 1.28rem; margin: 14px 0 10px; }
-    h2 { font-size: 0.98rem; margin: 0 0 10px; color: var(--accent); }
+    h1 { font-size: 1.25rem; margin: 14px 0 10px; display: flex; justify-content: space-between; align-items: center; }
+    h2 { font-size: 0.98rem; margin: 0 0 10px; color: var(--accent); display: flex; justify-content: space-between; align-items: center; }
+    .date-pill { font-size: 0.72rem; background: #334155; color: var(--accent); padding: 4px 8px; border-radius: 99px; font-weight: 600; }
     .card {
       background: var(--card); border: 1px solid var(--border);
       border-radius: 14px; padding: 14px; margin-bottom: 14px;
@@ -42,13 +42,20 @@
       width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border);
       background: #0f172a; color: var(--text); font-size: 0.9rem;
     }
+    input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent); margin-right: 10px; flex-shrink: 0; }
     button {
       background: var(--accent); color: #0f172a; font-weight: 700; border: none;
       margin-top: 10px; cursor: pointer;
     }
     button.secondary { background: #334155; color: var(--text); }
     button.danger { background: var(--red); color: #fff; }
-    button.small { width: auto; padding: 6px 10px; font-size: 0.75rem; margin-top: 0; }
+    button.small { width: auto; padding: 6px 10px; font-size: 0.74rem; margin-top: 0; }
+    .bulk-bar {
+      display: none; gap: 8px; margin-bottom: 10px; padding: 8px;
+      background: #0f172a; border-radius: 10px; border: 1px solid var(--border);
+      align-items: center; justify-content: space-between;
+    }
+    .bulk-bar.open { display: flex; }
     .tabs {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
       display: flex; background: #1e293b; border-top: 1px solid var(--border);
@@ -66,8 +73,9 @@
       padding: 9px 0; border-bottom: 1px solid var(--border); gap: 8px;
     }
     .mov-item:last-child { border-bottom: none; }
+    .mov-left { display: flex; align-items: center; flex: 1; }
     .badge {
-      display: inline-block; font-size: 0.66rem; padding: 2px 6px;
+      display: inline-block; font-size: 0.65rem; padding: 2px 6px;
       border-radius: 6px; background: #334155; color: var(--accent); margin-left: 5px;
     }
     .badge.rec { background: #a855f733; color: #d8b4fe; }
@@ -94,7 +102,7 @@
 
   <!-- 1. HOME -->
   <div id="sec-dash" class="section active">
-    <h1>📊 I Miei Conti (Oggi)</h1>
+    <h1><span>📊 I Miei Conti</span><span class="date-pill" id="oggi-label">--/--/----</span></h1>
     <div class="card grid-2">
       <div class="kpi">
         <span>🏦 UniCredit</span>
@@ -157,14 +165,24 @@
     </div>
 
     <div class="card">
-      <h2>🕒 Prossimi / Ultimi Movimenti Singoli</h2>
+      <h2>
+        <span>🕒 Movimenti Singoli</span>
+        <button class="secondary small" id="btn-sel-home" onclick="toggleSelectMode()">☑️ Seleziona</button>
+      </h2>
+      <div class="bulk-bar" id="bulk-bar-home">
+        <button class="secondary small" onclick="selezionaTutti('home')">Seleziona tutti</button>
+        <button class="danger small" onclick="eliminaSelezionati()">🗑️ Elimina (<span class="sel-count">0</span>)</button>
+      </div>
       <div id="lista-recenti"></div>
     </div>
   </div>
 
   <!-- 2. MESI -->
   <div id="sec-mesi" class="section">
-    <h1>📅 Registro Mensile</h1>
+    <h1>
+      <span>📅 Registro Mensile</span>
+      <button class="secondary small" id="btn-sel-mesi" onclick="toggleSelectMode()">☑️ Seleziona</button>
+    </h1>
     <div class="card">
       <label style="margin-top:0;">Seleziona Mese (anche futuro):</label>
       <input type="month" id="filtro-mese" onchange="renderMese()" />
@@ -172,6 +190,11 @@
         <div class="kpi"><span>Entrate Mese</span><strong id="mese-entrate" class="pos">0,00 €</strong></div>
         <div class="kpi"><span>Uscite Mese</span><strong id="mese-uscite" class="neg">0,00 €</strong></div>
       </div>
+    </div>
+
+    <div class="bulk-bar" id="bulk-bar-mesi">
+      <button class="secondary small" onclick="selezionaTutti('mesi')">Seleziona tutti (mese)</button>
+      <button class="danger small" onclick="eliminaSelezionati()">🗑️ Elimina (<span class="sel-count">0</span>)</button>
     </div>
 
     <div class="card">
@@ -203,7 +226,7 @@
           <input type="number" min="1" max="31" id="r-giorno" value="1" />
         </div>
       </div>
-      <label>Causale (es. Netflix, Rata 1, Stipendio)</label>
+      <label>Causale</label>
       <input type="text" id="r-causale" placeholder="Nome spesa o entrata" />
       <div class="grid-2">
         <div>
@@ -342,9 +365,25 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "bilancio_personale_v3";
+    const STORAGE_KEY = "bilancio_personale_v4";
     const ANCHOR_DATE = "2026-11-20";
     let chartInstance = null;
+    let selectMode = false;
+    let selectedIds = new Set();
+
+    // Data locale italiana YYYY-MM-DD (evita errori di fuso orario UTC)
+    function getTodayLocalStr() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function formatDateIT(iso) {
+      const [y, m, d] = iso.split("-");
+      return `${d}/${m}/${y}`;
+    }
 
     function getDefaultState() {
       return {
@@ -374,33 +413,43 @@
           { id: 103, tipo: "uscita", data: "2026-12-07", causale: "Abbonamento treno", importo: 25.30, tag: "" },
           { id: 104, tipo: "uscita", data: "2026-12-13", causale: "Cinema", importo: 9, tag: "" },
           { id: 105, tipo: "uscita", data: "2026-12-14", causale: "Abbonamento treno", importo: 25.30, tag: "" },
-          { id: 106, tipo: "entrata", data: "2026-12-21", causale: "Tredicesima", importo: 596, tag: "" },
-          { id: 107, tipo: "uscita", data: "2026-12-22", causale: "Regali Natale", importo: 340, tag: "" },
-          { id: 108, tipo: "uscita", data: "2026-12-31", causale: "Pernottamento", importo: 300, tag: "" },
-          { id: 109, tipo: "entrata", data: "2027-01-10", causale: "Bonus Renzi", importo: 1200, tag: "" },
-          { id: 110, tipo: "uscita", data: "2027-01-15", causale: "Bollo auto", importo: 197.72, tag: "" },
-          { id: 111, tipo: "uscita", data: "2027-01-19", causale: "Regalo Benny", importo: 100, tag: "" },
-          { id: 112, tipo: "uscita", data: "2027-03-01", causale: "Revisione auto", importo: 85, tag: "" },
-          { id: 113, tipo: "uscita", data: "2027-04-01", causale: "Assicurazione", importo: 235, tag: "" },
-          { id: 114, tipo: "entrata", data: "2027-07-01", causale: "Seconda rata borsa di studio", importo: 2500, tag: "" },
-          { id: 115, tipo: "entrata", data: "2027-07-10", causale: "Extra Stipendio / Quattordicesima", importo: 555, tag: "" },
-          { id: 116, tipo: "uscita", data: "2027-07-16", causale: "Giroconto Fondo TR", importo: 2500, tag: "Versamento Fondo" },
-          { id: 117, tipo: "uscita", data: "2027-11-01", causale: "Assicurazione", importo: 277, tag: "" },
-          { id: 118, tipo: "entrata", data: "2027-12-01", causale: "Borsa di studio", importo: 2500, tag: "" },
-          { id: 119, tipo: "uscita", data: "2027-12-01", causale: "Giroconto Conto TR", importo: 2500, tag: "Versamento Conto" },
-          { id: 120, tipo: "entrata", data: "2028-01-10", causale: "Bonus Renzi", importo: 1200, tag: "" },
-          { id: 121, tipo: "uscita", data: "2028-01-15", causale: "Bollo auto", importo: 197.72, tag: "" },
-          { id: 122, tipo: "uscita", data: "2028-01-19", causale: "Regalo Benny", importo: 100, tag: "" }
+          { id: 106, tipo: "uscita", data: "2026-12-15", causale: "Pratica amministrativa", importo: 216, tag: "" },
+          { id: 107, tipo: "entrata", data: "2026-12-21", causale: "Tredicesima", importo: 596, tag: "" },
+          { id: 108, tipo: "uscita", data: "2026-12-22", causale: "Regali Natale", importo: 340, tag: "" },
+          { id: 109, tipo: "uscita", data: "2026-12-31", causale: "Pernottamento", importo: 300, tag: "" },
+          { id: 110, tipo: "entrata", data: "2027-01-10", causale: "Bonus Renzi", importo: 1200, tag: "" },
+          { id: 111, tipo: "uscita", data: "2027-01-15", causale: "Bollo auto", importo: 197.72, tag: "" },
+          { id: 112, tipo: "uscita", data: "2027-01-19", causale: "Regalo Benny", importo: 100, tag: "" },
+          { id: 113, tipo: "uscita", data: "2027-03-01", causale: "Revisione auto", importo: 85, tag: "" },
+          { id: 114, tipo: "uscita", data: "2027-03-01", causale: "Abbonamento treno", importo: 75.90, tag: "" },
+          { id: 115, tipo: "uscita", data: "2027-04-01", causale: "Assicurazione", importo: 235, tag: "" },
+          { id: 116, tipo: "uscita", data: "2027-04-01", causale: "Abbonamento treno", importo: 75.90, tag: "" },
+          { id: 117, tipo: "uscita", data: "2027-05-01", causale: "Abbonamento treno", importo: 75.90, tag: "" },
+          { id: 118, tipo: "entrata", data: "2027-07-01", causale: "Seconda rata borsa di studio", importo: 2500, tag: "" },
+          { id: 119, tipo: "entrata", data: "2027-07-10", causale: "Extra Stipendio / Quattordicesima", importo: 555, tag: "" },
+          { id: 120, tipo: "uscita", data: "2027-07-16", causale: "Giroconto Fondo TR", importo: 2500, tag: "Versamento Fondo" },
+          { id: 121, tipo: "uscita", data: "2027-10-01", causale: "Abbonamento treno", importo: 75.90, tag: "" },
+          { id: 122, tipo: "uscita", data: "2027-11-01", causale: "Assicurazione", importo: 277, tag: "" },
+          { id: 123, tipo: "uscita", data: "2027-11-01", causale: "Abbonamento treno", importo: 75.90, tag: "" },
+          { id: 124, tipo: "entrata", data: "2027-12-01", causale: "Borsa di studio", importo: 2500, tag: "" },
+          { id: 125, tipo: "uscita", data: "2027-12-01", causale: "Giroconto Conto TR", importo: 2500, tag: "Versamento Conto" },
+          { id: 126, tipo: "entrata", data: "2028-01-10", causale: "Bonus Renzi", importo: 1200, tag: "" },
+          { id: 127, tipo: "uscita", data: "2028-01-15", causale: "Bollo auto", importo: 197.72, tag: "" },
+          { id: 128, tipo: "uscita", data: "2028-01-19", causale: "Regalo Benny", importo: 100, tag: "" }
         ]
       };
     }
 
     let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || getDefaultState();
 
-    const todayStr = new Date().toISOString().slice(0, 10);
-    document.getElementById("m-data").value = todayStr;
-    document.getElementById("r-inizio").value = todayStr;
-    document.getElementById("filtro-mese").value = "2026-12";
+    function initDates() {
+      const today = getTodayLocalStr();
+      document.getElementById("m-data").value = today;
+      document.getElementById("r-inizio").value = today;
+      if (!document.getElementById("filtro-mese").value) {
+        document.getElementById("filtro-mese").value = today.slice(0, 7);
+      }
+    }
 
     function salvaState() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -426,7 +475,58 @@
       if (id === "prev") calcolaPrevisione();
     }
 
-    // Genera tutti i movimenti (singoli + ricorrenze) per un dato mese YYYY-MM
+    // --- SELEZIONE MULTIPLA ---
+    function toggleSelectMode() {
+      selectMode = !selectMode;
+      selectedIds.clear();
+      aggiornaBulkUI();
+      aggiornaUI();
+      renderMese();
+    }
+
+    function toggleItemSelection(id) {
+      if (selectedIds.has(id)) selectedIds.delete(id);
+      else selectedIds.add(id);
+      aggiornaBulkUI();
+    }
+
+    function selezionaTutti(scope) {
+      let targetIds = [];
+      if (scope === "home") {
+        targetIds = state.movimenti.map(m => m.id);
+      } else {
+        const ym = document.getElementById("filtro-mese").value;
+        targetIds = state.movimenti.filter(m => m.data.startsWith(ym)).map(m => m.id);
+      }
+      const allSelected = targetIds.length > 0 && targetIds.every(id => selectedIds.has(id));
+      if (allSelected) targetIds.forEach(id => selectedIds.delete(id));
+      else targetIds.forEach(id => selectedIds.add(id));
+      aggiornaBulkUI();
+      aggiornaUI();
+      renderMese();
+    }
+
+    function eliminaSelezionati() {
+      if (selectedIds.size === 0) return alert("Seleziona almeno un movimento.");
+      if (!confirm(`Eliminare definitivamente ${selectedIds.size} movimenti selezionati?`)) return;
+      state.movimenti = state.movimenti.filter(m => !selectedIds.has(m.id));
+      selectedIds.clear();
+      selectMode = false;
+      aggiornaBulkUI();
+      salvaState();
+      renderMese();
+    }
+
+    function aggiornaBulkUI() {
+      document.getElementById("bulk-bar-home").classList.toggle("open", selectMode);
+      document.getElementById("bulk-bar-mesi").classList.toggle("open", selectMode);
+      const label = selectMode ? "✖️ Fine" : "☑️ Seleziona";
+      document.getElementById("btn-sel-home").textContent = label;
+      document.getElementById("btn-sel-mesi").textContent = label;
+      document.querySelectorAll(".sel-count").forEach(el => el.textContent = selectedIds.size);
+    }
+
+    // --- CALCOLI ---
     function getMovimentiDelMese(ym) {
       const [y, m] = ym.split("-").map(Number);
       const maxDay = new Date(y, m, 0).getDate();
@@ -451,7 +551,6 @@
       return [...singoli, ...ricorrenti].sort((a, b) => a.data.localeCompare(b.data));
     }
 
-    // Calcola saldi fino a una certa data limite (es. oggi)
     function calcolaSaldiFinoA(limitDate) {
       let uni = state.settings.unicreditIniziale;
       let prest = state.settings.prestitiIniziali;
@@ -569,24 +668,30 @@
     }
 
     function htmlMovimento(m) {
+      const checkbox = (selectMode && !m.isRec)
+        ? `<input type="checkbox" ${selectedIds.has(m.id) ? "checked" : ""} onchange="toggleItemSelection(${m.id})" />`
+        : "";
       const actions = m.isRec
-        ? `<span onclick="cambiaTab('rec')" style="color:#d8b4fe;cursor:pointer;">⚙️ Gestisci in Fisse</span>`
-        : `<span onclick="apriModifica(${m.id})" style="color:var(--accent);cursor:pointer;margin-right:10px;">✏️ Modifica</span>
+        ? `<span onclick="cambiaTab('rec')" style="color:#d8b4fe;cursor:pointer;">⚙️ Fissa</span>`
+        : `<span onclick="apriModifica(${m.id})" style="color:var(--accent);cursor:pointer;margin-right:10px;">✏️</span>
            <span onclick="eliminaMovimento(${m.id})" style="color:var(--muted);cursor:pointer;">🗑️</span>`;
 
       return `
         <div class="mov-item">
-          <div>
-            <strong>${m.causale}</strong>
-            ${m.isRec ? `<span class="badge rec">🔁 Fissa</span>` : ""}
-            ${m.tag ? `<span class="badge">${m.tag}</span>` : ""}
-            <div style="font-size:0.74rem;color:var(--muted);">${m.data}</div>
+          <div class="mov-left">
+            ${checkbox}
+            <div>
+              <strong>${m.causale}</strong>
+              ${m.isRec ? `<span class="badge rec">🔁</span>` : ""}
+              ${m.tag ? `<span class="badge">${m.tag}</span>` : ""}
+              <div style="font-size:0.74rem;color:var(--muted);">${formatDateIT(m.data)}</div>
+            </div>
           </div>
           <div style="text-align:right;">
             <strong class="${m.tipo === 'entrata' ? 'pos' : 'neg'}">
               ${m.tipo === 'entrata' ? '+' : '-'}${fmt(m.importo)}
             </strong>
-            <div style="margin-top:3px;font-size:0.72rem;">${actions}</div>
+            <div style="margin-top:3px;font-size:0.76rem;">${actions}</div>
           </div>
         </div>`;
     }
@@ -616,7 +721,7 @@
           <div>
             <strong>${r.causale}</strong>${r.tag ? `<span class="badge">${r.tag}</span>` : ""}
             <div style="font-size:0.73rem;color:var(--muted);">
-              Ogni giorno ${r.giorno} • Dal ${r.inizio || "sempre"} ${r.fine ? "al " + r.fine : "(senza fine)"}
+              Giorno ${r.giorno} • Dal ${r.inizio || "sempre"} ${r.fine ? "al " + r.fine : "(senza fine)"}
             </div>
           </div>
           <div style="text-align:right;">
@@ -628,6 +733,9 @@
     }
 
     function aggiornaUI() {
+      const todayStr = getTodayLocalStr();
+      document.getElementById("oggi-label").textContent = formatDateIT(todayStr);
+
       const s = calcolaSaldiFinoA(todayStr);
       document.getElementById("kpi-unicredit").textContent = fmt(s.uni);
       document.getElementById("kpi-prestiti").textContent = fmt(s.prest);
@@ -636,7 +744,9 @@
       document.getElementById("kpi-totale").textContent = fmt(s.totale);
 
       const lista = document.getElementById("lista-recenti");
-      lista.innerHTML = state.movimenti.slice(0, 8).map(m => htmlMovimento({ ...m, isRec: false })).join("");
+      lista.innerHTML = state.movimenti.length
+        ? state.movimenti.map(m => htmlMovimento({ ...m, isRec: false })).join("")
+        : `<p style="color:var(--muted);font-size:0.82rem;margin:0;">Nessun movimento singolo.</p>`;
 
       document.getElementById("s-unicredit").value = state.settings.unicreditIniziale;
       document.getElementById("s-prestiti").value = state.settings.prestitiIniziali;
@@ -679,7 +789,6 @@
           }
         });
 
-        // Interessi mensili (da dicembre in poi)
         if (ym > "2026-11") {
           conto += conto * rateContoM;
           fondo += fondo * rateFondoM;
@@ -774,6 +883,14 @@
       alert("Dati ripristinati!");
     }
 
+    // Aggiornamento automatico data e saldi quando riapri l'app su iOS
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) { initDates(); aggiornaUI(); }
+    });
+    window.addEventListener("focus", () => { initDates(); aggiornaUI(); });
+    setInterval(aggiornaUI, 60000);
+
+    initDates();
     aggiornaUI();
   </script>
 </body>
