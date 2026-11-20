@@ -25,8 +25,8 @@
       margin: 0; padding: env(safe-area-inset-top) 14px 85px 14px;
       background: var(--bg); color: var(--text);
     }
-    h1 { font-size: 1.25rem; margin: 14px 0 10px; display: flex; justify-content: space-between; align-items: center; }
-    h2 { font-size: 0.98rem; margin: 0 0 10px; color: var(--accent); display: flex; justify-content: space-between; align-items: center; }
+    h1 { font-size: 1.22rem; margin: 14px 0 10px; display: flex; justify-content: space-between; align-items: center; }
+    h2 { font-size: 0.96rem; margin: 0 0 10px; color: var(--accent); display: flex; justify-content: space-between; align-items: center; }
     .date-pill { font-size: 0.72rem; background: #334155; color: var(--accent); padding: 4px 8px; border-radius: 99px; font-weight: 600; }
     .card {
       background: var(--card); border: 1px solid var(--border);
@@ -34,10 +34,10 @@
     }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .kpi { background: #0f172a90; padding: 10px 12px; border-radius: 10px; border: 1px solid #33415566; }
-    .kpi.full { grid-column: span 2; display: flex; justify-content: space-between; align-items: center; background: #0ea5e918; border-color: #38bdf855; }
+    .kpi.full { grid-column: span 2; display: flex; justify-content: space-between; align-items: center; background: #0ea5e918; border-color: #38bdf855; gap: 8px; }
     .kpi span { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 2px; }
-    .kpi strong { font-size: 1.1rem; }
-    label { display: block; font-size: 0.76rem; color: var(--muted); margin: 8px 0 4px; }
+    .kpi strong { font-size: 1.08rem; }
+    label { display: block; font-size: 0.75rem; color: var(--muted); margin: 8px 0 4px; }
     input, select, button {
       width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border);
       background: #0f172a; color: var(--text); font-size: 0.9rem;
@@ -49,7 +49,7 @@
     }
     button.secondary { background: #334155; color: var(--text); }
     button.danger { background: var(--red); color: #fff; }
-    button.small { width: auto; padding: 6px 10px; font-size: 0.74rem; margin-top: 0; }
+    button.small { width: auto; padding: 6px 10px; font-size: 0.73rem; margin-top: 0; }
     .bulk-bar {
       display: none; gap: 8px; margin-bottom: 10px; padding: 8px;
       background: #0f172a; border-radius: 10px; border: 1px solid var(--border);
@@ -75,10 +75,11 @@
     .mov-item:last-child { border-bottom: none; }
     .mov-left { display: flex; align-items: center; flex: 1; }
     .badge {
-      display: inline-block; font-size: 0.65rem; padding: 2px 6px;
-      border-radius: 6px; background: #334155; color: var(--accent); margin-left: 5px;
+      display: inline-block; font-size: 0.64rem; padding: 2px 5px;
+      border-radius: 6px; background: #334155; color: var(--accent); margin-left: 4px;
     }
     .badge.rec { background: #a855f733; color: #d8b4fe; }
+    .badge.mod { background: #f59e0b33; color: #fcd34d; }
     .pos { color: var(--green); }
     .neg { color: var(--red); }
     .warn { color: var(--orange); }
@@ -123,9 +124,12 @@
       <div class="kpi full">
         <div>
           <span>💰 Patrimonio Totale Attivo</span>
-          <strong id="kpi-totale" class="pos" style="font-size:1.25rem;">0,00 €</strong>
+          <strong id="kpi-totale" class="pos" style="font-size:1.22rem;">0,00 €</strong>
         </div>
-        <button class="secondary small" onclick="cambiaTab('mesi')">📅 Vedi Mesi</button>
+        <div style="display:flex;gap:6px;">
+          <button class="secondary small" onclick="apriAllinea()">⚖️ Allinea</button>
+          <button class="secondary small" onclick="cambiaTab('mesi')">📅 Mesi</button>
+        </div>
       </div>
     </div>
 
@@ -140,26 +144,29 @@
           </select>
         </div>
         <div>
-          <label>Data</label>
-          <input type="date" id="m-data" />
-        </div>
-      </div>
-      <label>Causale</label>
-      <input type="text" id="m-causale" placeholder="Es. Cena, Benzina extra, Rimborso..." />
-      <div class="grid-2">
-        <div>
-          <label>Importo (€)</label>
-          <input type="number" step="0.01" id="m-importo" placeholder="0.00" />
-        </div>
-        <div id="tag-box">
-          <label>Destinazione / Tag</label>
-          <select id="m-tag">
-            <option value="">Spesa Viva (UniCredit)</option>
-            <option value="Rata Prestito">Rata Prestito (-Debito)</option>
-            <option value="Versamento Conto">Versamento Conto TR</option>
-            <option value="Versamento Fondo">Versamento Fondo TR</option>
+          <label>Conto</label>
+          <select id="m-conto">
+            <option value="unicredit">UniCredit</option>
+            <option value="conto_tr">Conto TR</option>
+            <option value="fondo_tr">Fondo TR</option>
           </select>
         </div>
+      </div>
+      <div class="grid-2">
+        <div><label>Data</label><input type="date" id="m-data" /></div>
+        <div><label>Importo (€)</label><input type="number" step="0.01" id="m-importo" placeholder="0.00" /></div>
+      </div>
+      <label>Causale</label>
+      <input type="text" id="m-causale" placeholder="Es. Cena, Benzina, Accredito TR..." />
+      <div id="tag-box">
+        <label>Destinazione / Tag (opzionale)</label>
+        <select id="m-tag">
+          <option value="">Spesa Viva</option>
+          <option value="Rata Prestito">Rata Prestito (-Debito)</option>
+          <option value="Versamento Conto">Giroconto → Conto TR</option>
+          <option value="Versamento Fondo">Giroconto → Fondo TR</option>
+          <option value="Versamento UniCredit">Giroconto → UniCredit</option>
+        </select>
       </div>
       <button onclick="aggiungiMovimento()">Salva Movimento</button>
     </div>
@@ -222,34 +229,33 @@
           </select>
         </div>
         <div>
-          <label>Giorno del mese (1-28)</label>
-          <input type="number" min="1" max="31" id="r-giorno" value="1" />
+          <label>Conto</label>
+          <select id="r-conto">
+            <option value="unicredit">UniCredit</option>
+            <option value="conto_tr">Conto TR</option>
+            <option value="fondo_tr">Fondo TR</option>
+          </select>
         </div>
+      </div>
+      <div class="grid-2">
+        <div><label>Giorno (1-28)</label><input type="number" min="1" max="31" id="r-giorno" value="1" /></div>
+        <div><label>Importo (€)</label><input type="number" step="0.01" id="r-importo" placeholder="0.00" /></div>
       </div>
       <label>Causale</label>
       <input type="text" id="r-causale" placeholder="Nome spesa o entrata" />
+      <div id="r-tag-box">
+        <label>Tag</label>
+        <select id="r-tag">
+          <option value="">Spesa Viva</option>
+          <option value="Rata Prestito">Rata Prestito (-Debito)</option>
+          <option value="Versamento Conto">Giroconto → Conto TR</option>
+          <option value="Versamento Fondo">Giroconto → Fondo TR</option>
+          <option value="Versamento UniCredit">Giroconto → UniCredit</option>
+        </select>
+      </div>
       <div class="grid-2">
-        <div>
-          <label>Importo (€)</label>
-          <input type="number" step="0.01" id="r-importo" placeholder="0.00" />
-        </div>
-        <div id="r-tag-box">
-          <label>Tag</label>
-          <select id="r-tag">
-            <option value="">Spesa Viva</option>
-            <option value="Rata Prestito">Rata Prestito (-Debito)</option>
-            <option value="Versamento Conto">Versamento Conto TR</option>
-            <option value="Versamento Fondo">Versamento Fondo TR</option>
-          </select>
-        </div>
-        <div>
-          <label>Data Inizio</label>
-          <input type="date" id="r-inizio" />
-        </div>
-        <div>
-          <label>Data Fine (opzionale)</label>
-          <input type="date" id="r-fine" />
-        </div>
+        <div><label>Data Inizio</label><input type="date" id="r-inizio" /></div>
+        <div><label>Data Fine (opz.)</label><input type="date" id="r-fine" /></div>
       </div>
       <button onclick="aggiungiRicorrenza()">Aggiungi Ricorrenza</button>
     </div>
@@ -280,13 +286,7 @@
       <div class="table-wrap">
         <table>
           <thead>
-            <tr>
-              <th>Mese</th>
-              <th>UniCr.</th>
-              <th>Conto</th>
-              <th>Fondo</th>
-              <th>Totale</th>
-            </tr>
+            <tr><th>Mese</th><th>UniCr.</th><th>Conto</th><th>Fondo</th><th>Totale</th></tr>
           </thead>
           <tbody id="tab-previsione"></tbody>
         </table>
@@ -319,7 +319,7 @@
     </div>
   </div>
 
-  <!-- MODAL MODIFICA MOVIMENTO SINGOLO -->
+  <!-- MODAL 1: MODIFICA MOVIMENTO SINGOLO -->
   <div id="modal-edit" class="modal-bg">
     <div class="modal">
       <h2>✏️ Modifica Movimento</h2>
@@ -332,25 +332,125 @@
             <option value="entrata">Entrata</option>
           </select>
         </div>
+        <div>
+          <label>Conto</label>
+          <select id="e-conto">
+            <option value="unicredit">UniCredit</option>
+            <option value="conto_tr">Conto TR</option>
+            <option value="fondo_tr">Fondo TR</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2">
         <div><label>Data</label><input type="date" id="e-data" /></div>
+        <div><label>Importo (€)</label><input type="number" step="0.01" id="e-importo" /></div>
       </div>
       <label>Causale</label>
       <input type="text" id="e-causale" />
-      <div class="grid-2">
-        <div><label>Importo (€)</label><input type="number" step="0.01" id="e-importo" /></div>
-        <div id="e-tag-box">
-          <label>Tag</label>
-          <select id="e-tag">
-            <option value="">Spesa Viva</option>
-            <option value="Rata Prestito">Rata Prestito</option>
-            <option value="Versamento Conto">Versamento Conto TR</option>
-            <option value="Versamento Fondo">Versamento Fondo TR</option>
-          </select>
-        </div>
+      <div id="e-tag-box">
+        <label>Tag</label>
+        <select id="e-tag">
+          <option value="">Spesa Viva</option>
+          <option value="Rata Prestito">Rata Prestito</option>
+          <option value="Versamento Conto">Giroconto → Conto TR</option>
+          <option value="Versamento Fondo">Giroconto → Fondo TR</option>
+          <option value="Versamento UniCredit">Giroconto → UniCredit</option>
+        </select>
       </div>
       <div class="grid-2" style="margin-top:8px;">
         <button class="secondary" onclick="chiudiModal('modal-edit')">Annulla</button>
         <button onclick="salvaModifica()">Salva</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: MODIFICA SINGOLO MESE DI UNA RICORRENZA (ECCEZIONE) -->
+  <div id="modal-exc" class="modal-bg">
+    <div class="modal">
+      <h2>✏️ Modifica Solo Questo Mese</h2>
+      <p style="font-size:0.78rem;color:var(--muted);margin-top:0;">
+        Cambia l'importo o la data solo per questo mese. Tutti gli altri mesi manterranno la regola fissa.
+      </p>
+      <input type="hidden" id="ex-key" />
+      <label>Causale</label>
+      <input type="text" id="ex-causale" />
+      <div class="grid-2">
+        <div><label>Data</label><input type="date" id="ex-data" /></div>
+        <div><label>Importo (€)</label><input type="number" step="0.01" id="ex-importo" /></div>
+      </div>
+      <div class="grid-2" style="margin-top:8px;">
+        <button class="secondary" onclick="chiudiModal('modal-exc')">Annulla</button>
+        <button onclick="salvaEccezione()">Salva Mese</button>
+      </div>
+      <button class="danger" onclick="saltaEccezione()">🚫 Salta solo questo mese</button>
+    </div>
+  </div>
+
+  <!-- MODAL 3: MODIFICA REGOLA FISSA -->
+  <div id="modal-rec" class="modal-bg">
+    <div class="modal">
+      <h2>✏️ Modifica Regola Fissa</h2>
+      <input type="hidden" id="er-id" />
+      <div class="grid-2">
+        <div>
+          <label>Tipo</label>
+          <select id="er-tipo" onchange="toggleTag('er-tipo','er-tag-box')">
+            <option value="uscita">Uscita Fissa</option>
+            <option value="entrata">Entrata Fissa</option>
+          </select>
+        </div>
+        <div>
+          <label>Conto</label>
+          <select id="er-conto">
+            <option value="unicredit">UniCredit</option>
+            <option value="conto_tr">Conto TR</option>
+            <option value="fondo_tr">Fondo TR</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div><label>Giorno (1-28)</label><input type="number" min="1" max="31" id="er-giorno" /></div>
+        <div><label>Importo (€)</label><input type="number" step="0.01" id="er-importo" /></div>
+      </div>
+      <label>Causale</label>
+      <input type="text" id="er-causale" />
+      <div id="er-tag-box">
+        <label>Tag</label>
+        <select id="er-tag">
+          <option value="">Spesa Viva</option>
+          <option value="Rata Prestito">Rata Prestito</option>
+          <option value="Versamento Conto">Giroconto → Conto TR</option>
+          <option value="Versamento Fondo">Giroconto → Fondo TR</option>
+          <option value="Versamento UniCredit">Giroconto → UniCredit</option>
+        </select>
+      </div>
+      <div class="grid-2">
+        <div><label>Inizio</label><input type="date" id="er-inizio" /></div>
+        <div><label>Fine (opz.)</label><input type="date" id="er-fine" /></div>
+      </div>
+      <div class="grid-2" style="margin-top:8px;">
+        <button class="secondary" onclick="chiudiModal('modal-rec')">Annulla</button>
+        <button onclick="salvaModificaRicorrenza()">Salva Regola</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: ALLINEA SALDI REALI -->
+  <div id="modal-allinea" class="modal-bg">
+    <div class="modal">
+      <h2>⚖️ Allinea Saldi Reali</h2>
+      <p style="font-size:0.78rem;color:var(--muted);margin-top:0;">
+        Inserisci i saldi esatti che vedi oggi su UniCredit e Trade Republic. L'app creerà in automatico la rettifica alla data di oggi.
+      </p>
+      <div class="grid-2">
+        <div><label>🏦 UniCredit Reale (€)</label><input type="number" step="0.01" id="al-uni" /></div>
+        <div><label>📉 Prestiti Residui (€)</label><input type="number" step="0.01" id="al-prest" /></div>
+        <div><label>💶 Conto TR Reale (€)</label><input type="number" step="0.01" id="al-conto" /></div>
+        <div><label>📈 Fondo TR Reale (€)</label><input type="number" step="0.01" id="al-fondo" /></div>
+      </div>
+      <div class="grid-2" style="margin-top:10px;">
+        <button class="secondary" onclick="chiudiModal('modal-allinea')">Annulla</button>
+        <button onclick="salvaAllineamento()">Allinea Ora</button>
       </div>
     </div>
   </div>
@@ -365,19 +465,16 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "bilancio_personale_v4";
+    const STORAGE_KEY = "bilancio_personale_v5";
     const ANCHOR_DATE = "2026-11-20";
+    const CONTO_LABEL = { unicredit: "UniCredit", conto_tr: "Conto TR", fondo_tr: "Fondo TR" };
     let chartInstance = null;
     let selectMode = false;
     let selectedIds = new Set();
 
-    // Data locale italiana YYYY-MM-DD (evita errori di fuso orario UTC)
     function getTodayLocalStr() {
       const d = new Date();
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      return `${y}-${m}-${day}`;
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     }
 
     function formatDateIT(iso) {
@@ -395,52 +492,54 @@
           tassoConto: 2.5,
           tassoFondo: 7.0
         },
+        eccezioni: {},
         ricorrenze: [
-          { id: 1, tipo: "entrata", causale: "Stipendio", importo: 980, giorno: 10, tag: "", inizio: "2026-12-01", fine: "" },
-          { id: 2, tipo: "uscita", causale: "Rata 1", importo: 85.22, giorno: 16, tag: "Rata Prestito", inizio: "2026-12-01", fine: "2028-05-15" },
-          { id: 3, tipo: "uscita", causale: "Rata 2", importo: 59.08, giorno: 1, tag: "Rata Prestito", inizio: "2026-12-01", fine: "2028-12-31" },
-          { id: 4, tipo: "uscita", causale: "Spotify", importo: 20.99, giorno: 1, tag: "", inizio: "2026-12-01", fine: "" },
-          { id: 5, tipo: "uscita", causale: "iCloud", importo: 2.99, giorno: 6, tag: "", inizio: "2026-12-01", fine: "" },
-          { id: 6, tipo: "uscita", causale: "Apple Music", importo: 5.99, giorno: 8, tag: "", inizio: "2026-12-01", fine: "" },
-          { id: 7, tipo: "uscita", causale: "Gemini", importo: 5.49, giorno: 12, tag: "", inizio: "2026-12-01", fine: "" },
-          { id: 8, tipo: "uscita", causale: "Giroconto Fondo TR", importo: 50, giorno: 16, tag: "Versamento Fondo", inizio: "2026-12-01", fine: "" },
-          { id: 9, tipo: "uscita", causale: "Benzina (stima mensile)", importo: 160, giorno: 15, tag: "", inizio: "2026-12-01", fine: "" },
-          { id: 10, tipo: "uscita", causale: "Sigarette", importo: 40, giorno: 28, tag: "", inizio: "2026-11-21", fine: "" }
+          { id: 1, tipo: "entrata", conto: "unicredit", causale: "Stipendio", importo: 980, giorno: 10, tag: "", inizio: "2026-12-01", fine: "" },
+          { id: 2, tipo: "uscita", conto: "unicredit", causale: "Rata 1", importo: 85.22, giorno: 16, tag: "Rata Prestito", inizio: "2026-12-01", fine: "2028-05-15" },
+          { id: 3, tipo: "uscita", conto: "unicredit", causale: "Rata 2", importo: 59.08, giorno: 1, tag: "Rata Prestito", inizio: "2026-12-01", fine: "2028-12-31" },
+          { id: 4, tipo: "uscita", conto: "unicredit", causale: "Spotify", importo: 20.99, giorno: 1, tag: "", inizio: "2026-12-01", fine: "" },
+          { id: 5, tipo: "uscita", conto: "unicredit", causale: "iCloud", importo: 2.99, giorno: 6, tag: "", inizio: "2026-12-01", fine: "" },
+          { id: 6, tipo: "uscita", conto: "unicredit", causale: "Apple Music", importo: 5.99, giorno: 8, tag: "", inizio: "2026-12-01", fine: "" },
+          { id: 7, tipo: "uscita", conto: "unicredit", causale: "Gemini", importo: 5.49, giorno: 12, tag: "", inizio: "2026-12-01", fine: "" },
+          { id: 8, tipo: "uscita", conto: "unicredit", causale: "Giroconto Fondo TR", importo: 50, giorno: 16, tag: "Versamento Fondo", inizio: "2026-12-01", fine: "" },
+          { id: 9, tipo: "uscita", conto: "unicredit", causale: "Benzina (stima mensile)", importo: 160, giorno: 15, tag: "", inizio: "2026-12-01", fine: "" },
+          { id: 10, tipo: "uscita", conto: "unicredit", causale: "Sigarette", importo: 40, giorno: 28, tag: "", inizio: "2026-11-21", fine: "" }
         ],
         movimenti: [
-          { id: 101, tipo: "entrata", data: "2026-12-01", causale: "Borsa di studio", importo: 2500, tag: "" },
-          { id: 102, tipo: "uscita", data: "2026-12-01", causale: "Giroconto Conto TR", importo: 2500, tag: "Versamento Conto" },
-          { id: 103, tipo: "uscita", data: "2026-12-07", causale: "Abbonamento treno", importo: 25.30, tag: "" },
-          { id: 104, tipo: "uscita", data: "2026-12-13", causale: "Cinema", importo: 9, tag: "" },
-          { id: 105, tipo: "uscita", data: "2026-12-14", causale: "Abbonamento treno", importo: 25.30, tag: "" },
-          { id: 106, tipo: "uscita", data: "2026-12-15", causale: "Pratica amministrativa", importo: 216, tag: "" },
-          { id: 107, tipo: "entrata", data: "2026-12-21", causale: "Tredicesima", importo: 596, tag: "" },
-          { id: 108, tipo: "uscita", data: "2026-12-22", causale: "Regali Natale", importo: 340, tag: "" },
-          { id: 109, tipo: "uscita", data: "2026-12-31", causale: "Pernottamento", importo: 300, tag: "" },
-          { id: 110, tipo: "entrata", data: "2027-01-10", causale: "Bonus Renzi", importo: 1200, tag: "" },
-          { id: 111, tipo: "uscita", data: "2027-01-15", causale: "Bollo auto", importo: 197.72, tag: "" },
-          { id: 112, tipo: "uscita", data: "2027-01-19", causale: "Regalo Benny", importo: 100, tag: "" },
-          { id: 113, tipo: "uscita", data: "2027-03-01", causale: "Revisione auto", importo: 85, tag: "" },
-          { id: 114, tipo: "uscita", data: "2027-03-01", causale: "Abbonamento treno", importo: 75.90, tag: "" },
-          { id: 115, tipo: "uscita", data: "2027-04-01", causale: "Assicurazione", importo: 235, tag: "" },
-          { id: 116, tipo: "uscita", data: "2027-04-01", causale: "Abbonamento treno", importo: 75.90, tag: "" },
-          { id: 117, tipo: "uscita", data: "2027-05-01", causale: "Abbonamento treno", importo: 75.90, tag: "" },
-          { id: 118, tipo: "entrata", data: "2027-07-01", causale: "Seconda rata borsa di studio", importo: 2500, tag: "" },
-          { id: 119, tipo: "entrata", data: "2027-07-10", causale: "Extra Stipendio / Quattordicesima", importo: 555, tag: "" },
-          { id: 120, tipo: "uscita", data: "2027-07-16", causale: "Giroconto Fondo TR", importo: 2500, tag: "Versamento Fondo" },
-          { id: 121, tipo: "uscita", data: "2027-10-01", causale: "Abbonamento treno", importo: 75.90, tag: "" },
-          { id: 122, tipo: "uscita", data: "2027-11-01", causale: "Assicurazione", importo: 277, tag: "" },
-          { id: 123, tipo: "uscita", data: "2027-11-01", causale: "Abbonamento treno", importo: 75.90, tag: "" },
-          { id: 124, tipo: "entrata", data: "2027-12-01", causale: "Borsa di studio", importo: 2500, tag: "" },
-          { id: 125, tipo: "uscita", data: "2027-12-01", causale: "Giroconto Conto TR", importo: 2500, tag: "Versamento Conto" },
-          { id: 126, tipo: "entrata", data: "2028-01-10", causale: "Bonus Renzi", importo: 1200, tag: "" },
-          { id: 127, tipo: "uscita", data: "2028-01-15", causale: "Bollo auto", importo: 197.72, tag: "" },
-          { id: 128, tipo: "uscita", data: "2028-01-19", causale: "Regalo Benny", importo: 100, tag: "" }
+          { id: 101, tipo: "entrata", conto: "unicredit", data: "2026-12-01", causale: "Borsa di studio", importo: 2500, tag: "" },
+          { id: 102, tipo: "uscita", conto: "unicredit", data: "2026-12-01", causale: "Giroconto Conto TR", importo: 2500, tag: "Versamento Conto" },
+          { id: 103, tipo: "uscita", conto: "unicredit", data: "2026-12-07", causale: "Abbonamento treno", importo: 25.30, tag: "" },
+          { id: 104, tipo: "uscita", conto: "unicredit", data: "2026-12-13", causale: "Cinema", importo: 9, tag: "" },
+          { id: 105, tipo: "uscita", conto: "unicredit", data: "2026-12-14", causale: "Abbonamento treno", importo: 25.30, tag: "" },
+          { id: 106, tipo: "uscita", conto: "unicredit", data: "2026-12-15", causale: "Pratica amministrativa", importo: 216, tag: "" },
+          { id: 107, tipo: "entrata", conto: "unicredit", data: "2026-12-21", causale: "Tredicesima", importo: 596, tag: "" },
+          { id: 108, tipo: "uscita", conto: "unicredit", data: "2026-12-22", causale: "Regali Natale", importo: 340, tag: "" },
+          { id: 109, tipo: "uscita", conto: "unicredit", data: "2026-12-31", causale: "Pernottamento", importo: 300, tag: "" },
+          { id: 110, tipo: "entrata", conto: "unicredit", data: "2027-01-10", causale: "Bonus Renzi", importo: 1200, tag: "" },
+          { id: 111, tipo: "uscita", conto: "unicredit", data: "2027-01-15", causale: "Bollo auto", importo: 197.72, tag: "" },
+          { id: 112, tipo: "uscita", conto: "unicredit", data: "2027-01-19", causale: "Regalo Benny", importo: 100, tag: "" },
+          { id: 113, tipo: "uscita", conto: "unicredit", data: "2027-03-01", causale: "Revisione auto", importo: 85, tag: "" },
+          { id: 114, tipo: "uscita", conto: "unicredit", data: "2027-03-01", causale: "Abbonamento treno", importo: 75.90, tag: "" },
+          { id: 115, tipo: "uscita", conto: "unicredit", data: "2027-04-01", causale: "Assicurazione", importo: 235, tag: "" },
+          { id: 116, tipo: "uscita", conto: "unicredit", data: "2027-04-01", causale: "Abbonamento treno", importo: 75.90, tag: "" },
+          { id: 117, tipo: "uscita", conto: "unicredit", data: "2027-05-01", causale: "Abbonamento treno", importo: 75.90, tag: "" },
+          { id: 118, tipo: "entrata", conto: "unicredit", data: "2027-07-01", causale: "Seconda rata borsa di studio", importo: 2500, tag: "" },
+          { id: 119, tipo: "entrata", conto: "unicredit", data: "2027-07-10", causale: "Extra Stipendio / Quattordicesima", importo: 555, tag: "" },
+          { id: 120, tipo: "uscita", conto: "unicredit", data: "2027-07-16", causale: "Giroconto Fondo TR", importo: 2500, tag: "Versamento Fondo" },
+          { id: 121, tipo: "uscita", conto: "unicredit", data: "2027-10-01", causale: "Abbonamento treno", importo: 75.90, tag: "" },
+          { id: 122, tipo: "uscita", conto: "unicredit", data: "2027-11-01", causale: "Assicurazione", importo: 277, tag: "" },
+          { id: 123, tipo: "uscita", conto: "unicredit", data: "2027-11-01", causale: "Abbonamento treno", importo: 75.90, tag: "" },
+          { id: 124, tipo: "entrata", conto: "unicredit", data: "2027-12-01", causale: "Borsa di studio", importo: 2500, tag: "" },
+          { id: 125, tipo: "uscita", conto: "unicredit", data: "2027-12-01", causale: "Giroconto Conto TR", importo: 2500, tag: "Versamento Conto" },
+          { id: 126, tipo: "entrata", conto: "unicredit", data: "2028-01-10", causale: "Bonus Renzi", importo: 1200, tag: "" },
+          { id: 127, tipo: "uscita", conto: "unicredit", data: "2028-01-15", causale: "Bollo auto", importo: 197.72, tag: "" },
+          { id: 128, tipo: "uscita", conto: "unicredit", data: "2028-01-19", causale: "Regalo Benny", importo: 100, tag: "" }
         ]
       };
     }
 
     let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || getDefaultState();
+    if (!state.eccezioni) state.eccezioni = {};
 
     function initDates() {
       const today = getTodayLocalStr();
@@ -461,8 +560,7 @@
     }
 
     function toggleTag(selectId, boxId) {
-      const tipo = document.getElementById(selectId).value;
-      document.getElementById(boxId).style.display = tipo === "uscita" ? "block" : "none";
+      document.getElementById(boxId).style.display = document.getElementById(selectId).value === "uscita" ? "block" : "none";
     }
 
     function cambiaTab(id) {
@@ -473,6 +571,10 @@
       if (id === "mesi") renderMese();
       if (id === "rec") renderRicorrenze();
       if (id === "prev") calcolaPrevisione();
+    }
+
+    function chiudiModal(id) {
+      document.getElementById(id).classList.remove("open");
     }
 
     // --- SELEZIONE MULTIPLA ---
@@ -491,13 +593,9 @@
     }
 
     function selezionaTutti(scope) {
-      let targetIds = [];
-      if (scope === "home") {
-        targetIds = state.movimenti.map(m => m.id);
-      } else {
-        const ym = document.getElementById("filtro-mese").value;
-        targetIds = state.movimenti.filter(m => m.data.startsWith(ym)).map(m => m.id);
-      }
+      let targetIds = scope === "home"
+        ? state.movimenti.map(m => m.id)
+        : state.movimenti.filter(m => m.data.startsWith(document.getElementById("filtro-mese").value)).map(m => m.id);
       const allSelected = targetIds.length > 0 && targetIds.every(id => selectedIds.has(id));
       if (allSelected) targetIds.forEach(id => selectedIds.delete(id));
       else targetIds.forEach(id => selectedIds.add(id));
@@ -526,7 +624,25 @@
       document.querySelectorAll(".sel-count").forEach(el => el.textContent = selectedIds.size);
     }
 
-    // --- CALCOLI ---
+    // --- MOTORE CALCOLO CONTI ---
+    function applicaMovimento(bal, m) {
+      const c = m.conto || "unicredit";
+      if (m.tipo === "entrata") {
+        if (c === "unicredit") bal.uni += m.importo;
+        else if (c === "conto_tr") bal.conto += m.importo;
+        else if (c === "fondo_tr") bal.fondo += m.importo;
+      } else {
+        if (c === "unicredit") bal.uni -= m.importo;
+        else if (c === "conto_tr") bal.conto -= m.importo;
+        else if (c === "fondo_tr") bal.fondo -= m.importo;
+
+        if (m.tag === "Versamento Conto") bal.conto += m.importo;
+        if (m.tag === "Versamento Fondo") bal.fondo += m.importo;
+        if (m.tag === "Versamento UniCredit") bal.uni += m.importo;
+        if (m.tag === "Rata Prestito") bal.prest = Math.max(0, bal.prest - m.importo);
+      }
+    }
+
     function getMovimentiDelMese(ym) {
       const [y, m] = ym.split("-").map(Number);
       const maxDay = new Date(y, m, 0).getDate();
@@ -541,9 +657,15 @@
         const afterStart = !r.inizio || occDate >= r.inizio;
         const beforeEnd = !r.fine || occDate <= r.fine;
         if (afterStart && beforeEnd) {
+          const exKey = `${r.id}_${ym}`;
+          const ex = state.eccezioni[exKey];
+          if (ex && ex.skipped) return;
           ricorrenti.push({
-            id: r.id, tipo: r.tipo, data: occDate, causale: r.causale,
-            importo: r.importo, tag: r.tag, isRec: true
+            id: r.id, exKey, tipo: r.tipo, conto: r.conto || "unicredit",
+            data: ex ? ex.data : occDate,
+            causale: ex ? ex.causale : r.causale,
+            importo: ex ? ex.importo : r.importo,
+            tag: r.tag, isRec: true, isMod: !!ex
           });
         }
       });
@@ -552,46 +674,78 @@
     }
 
     function calcolaSaldiFinoA(limitDate) {
-      let uni = state.settings.unicreditIniziale;
-      let prest = state.settings.prestitiIniziali;
-      let conto = state.settings.contoIniziale;
-      let fondo = state.settings.fondoIniziale;
-
-      if (limitDate <= ANCHOR_DATE) {
-        return { uni, prest, conto, fondo, totale: uni + conto + fondo };
-      }
+      const bal = {
+        uni: state.settings.unicreditIniziale,
+        prest: state.settings.prestitiIniziali,
+        conto: state.settings.contoIniziale,
+        fondo: state.settings.fondoIniziale
+      };
+      if (limitDate <= ANCHOR_DATE) return { ...bal, totale: bal.uni + bal.conto + bal.fondo };
 
       let curY = 2026, curM = 11;
       const [limY, limM] = limitDate.slice(0, 7).split("-").map(Number);
-
       while (curY < limY || (curY === limY && curM <= limM)) {
         const ym = `${curY}-${String(curM).padStart(2, "0")}`;
-        const movs = getMovimentiDelMese(ym).filter(m => m.data > ANCHOR_DATE && m.data <= limitDate);
-        movs.forEach(m => {
-          if (m.tipo === "entrata") {
-            uni += m.importo;
-          } else {
-            uni -= m.importo;
-            if (m.tag === "Versamento Conto") conto += m.importo;
-            if (m.tag === "Versamento Fondo") fondo += m.importo;
-            if (m.tag === "Rata Prestito") prest = Math.max(0, prest - m.importo);
-          }
-        });
+        getMovimentiDelMese(ym)
+          .filter(m => m.data > ANCHOR_DATE && m.data <= limitDate)
+          .forEach(m => applicaMovimento(bal, m));
         curM++;
         if (curM > 12) { curM = 1; curY++; }
       }
-      return { uni, prest, conto, fondo, totale: uni + conto + fondo };
+      return { ...bal, totale: bal.uni + bal.conto + bal.fondo };
     }
 
+    // --- ALLINEA SALDI REALI ---
+    function apriAllinea() {
+      const s = calcolaSaldiFinoA(getTodayLocalStr());
+      document.getElementById("al-uni").value = s.uni.toFixed(2);
+      document.getElementById("al-prest").value = s.prest.toFixed(2);
+      document.getElementById("al-conto").value = s.conto.toFixed(2);
+      document.getElementById("al-fondo").value = s.fondo.toFixed(2);
+      document.getElementById("modal-allinea").classList.add("open");
+    }
+
+    function salvaAllineamento() {
+      const today = getTodayLocalStr();
+      const s = calcolaSaldiFinoA(today);
+      const nUni = parseFloat(document.getElementById("al-uni").value);
+      const nPrest = parseFloat(document.getElementById("al-prest").value);
+      const nConto = parseFloat(document.getElementById("al-conto").value);
+      const nFondo = parseFloat(document.getElementById("al-fondo").value);
+
+      const addAdj = (conto, diff, label) => {
+        if (Math.abs(diff) < 0.01) return;
+        state.movimenti.push({
+          id: Date.now() + Math.floor(Math.random() * 1000),
+          tipo: diff > 0 ? "entrata" : "uscita",
+          conto, data: today, causale: `⚖️ Allineamento ${label}`,
+          importo: Math.round(Math.abs(diff) * 100) / 100, tag: ""
+        });
+      };
+
+      if (!isNaN(nUni)) addAdj("unicredit", nUni - s.uni, "UniCredit");
+      if (!isNaN(nConto)) addAdj("conto_tr", nConto - s.conto, "Conto TR");
+      if (!isNaN(nFondo)) addAdj("fondo_tr", nFondo - s.fondo, "Fondo TR");
+      if (!isNaN(nPrest) && Math.abs(nPrest - s.prest) >= 0.01) {
+        state.settings.prestitiIniziali = Math.round((state.settings.prestitiIniziali + (nPrest - s.prest)) * 100) / 100;
+      }
+
+      state.movimenti.sort((a, b) => a.data.localeCompare(b.data));
+      chiudiModal("modal-allinea");
+      salvaState();
+    }
+
+    // --- MOVIMENTI SINGOLI ---
     function aggiungiMovimento() {
       const tipo = document.getElementById("m-tipo").value;
+      const conto = document.getElementById("m-conto").value;
       const data = document.getElementById("m-data").value;
       const causale = document.getElementById("m-causale").value.trim() || (tipo === "entrata" ? "Entrata" : "Spesa");
       const importo = parseFloat(document.getElementById("m-importo").value);
       const tag = tipo === "uscita" ? document.getElementById("m-tag").value : "";
 
       if (!data || isNaN(importo) || importo <= 0) return alert("Inserisci data e importo valido.");
-      state.movimenti.push({ id: Date.now(), tipo, data, causale, importo, tag });
+      state.movimenti.push({ id: Date.now(), tipo, conto, data, causale, importo, tag });
       state.movimenti.sort((a, b) => a.data.localeCompare(b.data));
       document.getElementById("m-causale").value = "";
       document.getElementById("m-importo").value = "";
@@ -603,16 +757,13 @@
       if (!m) return;
       document.getElementById("e-id").value = m.id;
       document.getElementById("e-tipo").value = m.tipo;
+      document.getElementById("e-conto").value = m.conto || "unicredit";
       document.getElementById("e-data").value = m.data;
       document.getElementById("e-causale").value = m.causale;
       document.getElementById("e-importo").value = m.importo;
       document.getElementById("e-tag").value = m.tag || "";
       toggleTag("e-tipo", "e-tag-box");
       document.getElementById("modal-edit").classList.add("open");
-    }
-
-    function chiudiModal(id) {
-      document.getElementById(id).classList.remove("open");
     }
 
     function salvaModifica() {
@@ -625,6 +776,7 @@
 
       state.movimenti[idx] = {
         id, tipo,
+        conto: document.getElementById("e-conto").value,
         data: document.getElementById("e-data").value,
         causale: document.getElementById("e-causale").value.trim() || "Movimento",
         importo,
@@ -642,8 +794,42 @@
       renderMese();
     }
 
+    // --- ECCEZIONI SINGOLO MESE ---
+    function apriEccezione(exKey, data, causale, importo) {
+      document.getElementById("ex-key").value = exKey;
+      document.getElementById("ex-data").value = data;
+      document.getElementById("ex-causale").value = causale;
+      document.getElementById("ex-importo").value = importo;
+      document.getElementById("modal-exc").classList.add("open");
+    }
+
+    function salvaEccezione() {
+      const key = document.getElementById("ex-key").value;
+      const importo = parseFloat(document.getElementById("ex-importo").value);
+      if (isNaN(importo) || importo < 0) return alert("Importo non valido.");
+      state.eccezioni[key] = {
+        data: document.getElementById("ex-data").value,
+        causale: document.getElementById("ex-causale").value.trim(),
+        importo,
+        skipped: false
+      };
+      chiudiModal("modal-exc");
+      salvaState();
+      renderMese();
+    }
+
+    function saltaEccezione() {
+      const key = document.getElementById("ex-key").value;
+      state.eccezioni[key] = { skipped: true };
+      chiudiModal("modal-exc");
+      salvaState();
+      renderMese();
+    }
+
+    // --- RICORRENZE ---
     function aggiungiRicorrenza() {
       const tipo = document.getElementById("r-tipo").value;
+      const conto = document.getElementById("r-conto").value;
       const giorno = parseInt(document.getElementById("r-giorno").value) || 1;
       const causale = document.getElementById("r-causale").value.trim();
       const importo = parseFloat(document.getElementById("r-importo").value);
@@ -652,7 +838,7 @@
       const fine = document.getElementById("r-fine").value;
 
       if (!causale || isNaN(importo) || importo <= 0) return alert("Inserisci causale e importo.");
-      state.ricorrenze.push({ id: Date.now(), tipo, giorno, causale, importo, tag, inizio, fine });
+      state.ricorrenze.push({ id: Date.now(), tipo, conto, giorno, causale, importo, tag, inizio, fine });
       document.getElementById("r-causale").value = "";
       document.getElementById("r-importo").value = "";
       document.getElementById("r-fine").value = "";
@@ -660,21 +846,63 @@
       renderRicorrenze();
     }
 
+    function apriModificaRicorrenza(id) {
+      const r = state.ricorrenze.find(x => x.id === id);
+      if (!r) return;
+      document.getElementById("er-id").value = r.id;
+      document.getElementById("er-tipo").value = r.tipo;
+      document.getElementById("er-conto").value = r.conto || "unicredit";
+      document.getElementById("er-giorno").value = r.giorno;
+      document.getElementById("er-importo").value = r.importo;
+      document.getElementById("er-causale").value = r.causale;
+      document.getElementById("er-tag").value = r.tag || "";
+      document.getElementById("er-inizio").value = r.inizio || "";
+      document.getElementById("er-fine").value = r.fine || "";
+      toggleTag("er-tipo", "er-tag-box");
+      document.getElementById("modal-rec").classList.add("open");
+    }
+
+    function salvaModificaRicorrenza() {
+      const id = Number(document.getElementById("er-id").value);
+      const idx = state.ricorrenze.findIndex(x => x.id === id);
+      if (idx === -1) return;
+      const tipo = document.getElementById("er-tipo").value;
+      const importo = parseFloat(document.getElementById("er-importo").value);
+      if (isNaN(importo) || importo <= 0) return alert("Importo non valido.");
+
+      state.ricorrenze[idx] = {
+        id, tipo,
+        conto: document.getElementById("er-conto").value,
+        giorno: parseInt(document.getElementById("er-giorno").value) || 1,
+        causale: document.getElementById("er-causale").value.trim(),
+        importo,
+        tag: tipo === "uscita" ? document.getElementById("er-tag").value : "",
+        inizio: document.getElementById("er-inizio").value,
+        fine: document.getElementById("er-fine").value
+      };
+      chiudiModal("modal-rec");
+      salvaState();
+      renderRicorrenze();
+    }
+
     function eliminaRicorrenza(id) {
-      if (!confirm("Eliminare questa spesa/entrata periodica?")) return;
+      if (!confirm("Eliminare questa regola periodica?")) return;
       state.ricorrenze = state.ricorrenze.filter(r => r.id !== id);
       salvaState();
       renderRicorrenze();
     }
 
+    // --- RENDER ---
     function htmlMovimento(m) {
       const checkbox = (selectMode && !m.isRec)
         ? `<input type="checkbox" ${selectedIds.has(m.id) ? "checked" : ""} onchange="toggleItemSelection(${m.id})" />`
         : "";
+      const safeCausale = m.causale.replace(/'/g, "\\'");
       const actions = m.isRec
-        ? `<span onclick="cambiaTab('rec')" style="color:#d8b4fe;cursor:pointer;">⚙️ Fissa</span>`
+        ? `<span onclick="apriEccezione('${m.exKey}','${m.data}','${safeCausale}',${m.importo})" style="color:var(--accent);cursor:pointer;">✏️ Mese</span>`
         : `<span onclick="apriModifica(${m.id})" style="color:var(--accent);cursor:pointer;margin-right:10px;">✏️</span>
            <span onclick="eliminaMovimento(${m.id})" style="color:var(--muted);cursor:pointer;">🗑️</span>`;
+      const contoBadge = m.conto && m.conto !== "unicredit" ? `<span class="badge">${CONTO_LABEL[m.conto]}</span>` : "";
 
       return `
         <div class="mov-item">
@@ -683,15 +911,17 @@
             <div>
               <strong>${m.causale}</strong>
               ${m.isRec ? `<span class="badge rec">🔁</span>` : ""}
+              ${m.isMod ? `<span class="badge mod">Mod.</span>` : ""}
+              ${contoBadge}
               ${m.tag ? `<span class="badge">${m.tag}</span>` : ""}
-              <div style="font-size:0.74rem;color:var(--muted);">${formatDateIT(m.data)}</div>
+              <div style="font-size:0.73rem;color:var(--muted);">${formatDateIT(m.data)}</div>
             </div>
           </div>
           <div style="text-align:right;">
             <strong class="${m.tipo === 'entrata' ? 'pos' : 'neg'}">
               ${m.tipo === 'entrata' ? '+' : '-'}${fmt(m.importo)}
             </strong>
-            <div style="margin-top:3px;font-size:0.76rem;">${actions}</div>
+            <div style="margin-top:3px;font-size:0.74rem;">${actions}</div>
           </div>
         </div>`;
     }
@@ -715,18 +945,20 @@
     }
 
     function renderRicorrenze() {
-      const box = document.getElementById("lista-ricorrenze");
-      box.innerHTML = state.ricorrenze.map(r => `
+      document.getElementById("lista-ricorrenze").innerHTML = state.ricorrenze.map(r => `
         <div class="mov-item">
           <div>
             <strong>${r.causale}</strong>${r.tag ? `<span class="badge">${r.tag}</span>` : ""}
-            <div style="font-size:0.73rem;color:var(--muted);">
-              Giorno ${r.giorno} • Dal ${r.inizio || "sempre"} ${r.fine ? "al " + r.fine : "(senza fine)"}
+            <div style="font-size:0.72rem;color:var(--muted);">
+              ${CONTO_LABEL[r.conto || "unicredit"]} • Giorno ${r.giorno} • Dal ${r.inizio || "sempre"} ${r.fine ? "al " + r.fine : ""}
             </div>
           </div>
           <div style="text-align:right;">
             <strong class="${r.tipo === 'entrata' ? 'pos' : 'neg'}">${r.tipo === 'entrata' ? '+' : '-'}${fmt(r.importo)}</strong>
-            <div onclick="eliminaRicorrenza(${r.id})" style="font-size:0.72rem;color:var(--muted);cursor:pointer;margin-top:3px;">🗑️ Elimina</div>
+            <div style="font-size:0.74rem;margin-top:3px;">
+              <span onclick="apriModificaRicorrenza(${r.id})" style="color:var(--accent);cursor:pointer;margin-right:10px;">✏️</span>
+              <span onclick="eliminaRicorrenza(${r.id})" style="color:var(--muted);cursor:pointer;">🗑️</span>
+            </div>
           </div>
         </div>
       `).join("");
@@ -743,8 +975,7 @@
       document.getElementById("kpi-fondo").textContent = fmt(s.fondo);
       document.getElementById("kpi-totale").textContent = fmt(s.totale);
 
-      const lista = document.getElementById("lista-recenti");
-      lista.innerHTML = state.movimenti.length
+      document.getElementById("lista-recenti").innerHTML = state.movimenti.length
         ? state.movimenti.map(m => htmlMovimento({ ...m, isRec: false })).join("")
         : `<p style="color:var(--muted);font-size:0.82rem;margin:0;">Nessun movimento singolo.</p>`;
 
@@ -761,10 +992,12 @@
       if (!targetStr) return;
       const [tYear, tMonth] = targetStr.split("-").map(Number);
 
-      let uni = state.settings.unicreditIniziale;
-      let prest = state.settings.prestitiIniziali;
-      let conto = state.settings.contoIniziale;
-      let fondo = state.settings.fondoIniziale;
+      const bal = {
+        uni: state.settings.unicreditIniziale,
+        prest: state.settings.prestitiIniziali,
+        conto: state.settings.contoIniziale,
+        fondo: state.settings.fondoIniziale
+      };
 
       const rateContoM = (state.settings.tassoConto / 100 / 12) * (1 - 0.26);
       const rateFondoM = Math.pow(1 + state.settings.tassoFondo / 100, 1 / 12) - 1;
@@ -776,37 +1009,28 @@
       while ((curY < tYear || (curY === tYear && curM <= tMonth)) && safety < 240) {
         safety++;
         const ym = `${curY}-${String(curM).padStart(2, "0")}`;
-        const movs = getMovimentiDelMese(ym).filter(m => m.data > ANCHOR_DATE);
-
-        movs.forEach(m => {
-          if (m.tipo === "entrata") {
-            uni += m.importo;
-          } else {
-            uni -= m.importo;
-            if (m.tag === "Versamento Conto") conto += m.importo;
-            if (m.tag === "Versamento Fondo") fondo += m.importo;
-            if (m.tag === "Rata Prestito") prest = Math.max(0, prest - m.importo);
-          }
-        });
+        getMovimentiDelMese(ym)
+          .filter(m => m.data > ANCHOR_DATE)
+          .forEach(m => applicaMovimento(bal, m));
 
         if (ym > "2026-11") {
-          conto += conto * rateContoM;
-          fondo += fondo * rateFondoM;
+          bal.conto += bal.conto * rateContoM;
+          bal.fondo += bal.fondo * rateFondoM;
         }
 
-        const tot = uni + conto + fondo;
+        const tot = bal.uni + bal.conto + bal.fondo;
         const label = String(curM).padStart(2, "0") + "/" + String(curY).slice(2);
         labels.push(label);
         dTot.push(Math.round(tot));
-        dConto.push(Math.round(conto));
-        dFondo.push(Math.round(fondo));
-        dPrest.push(Math.round(prest));
+        dConto.push(Math.round(bal.conto));
+        dFondo.push(Math.round(bal.fondo));
+        dPrest.push(Math.round(bal.prest));
 
         rows += `<tr>
           <td>${label}</td>
-          <td>${Math.round(uni)}€</td>
-          <td>${Math.round(conto)}€</td>
-          <td>${Math.round(fondo)}€</td>
+          <td>${Math.round(bal.uni)}€</td>
+          <td>${Math.round(bal.conto)}€</td>
+          <td>${Math.round(bal.fondo)}€</td>
           <td><strong>${Math.round(tot)}€</strong></td>
         </tr>`;
 
@@ -814,8 +1038,8 @@
         if (curM > 12) { curM = 1; curY++; }
       }
 
-      document.getElementById("p-res-tot").textContent = fmt(uni + conto + fondo);
-      document.getElementById("p-res-prest").textContent = fmt(prest);
+      document.getElementById("p-res-tot").textContent = fmt(bal.uni + bal.conto + bal.fondo);
+      document.getElementById("p-res-prest").textContent = fmt(bal.prest);
       document.getElementById("tab-previsione").innerHTML = rows;
 
       const ctx = document.getElementById("graficoPortafoglio").getContext("2d");
@@ -869,6 +1093,7 @@
       reader.onload = ev => {
         try {
           state = JSON.parse(ev.target.result);
+          if (!state.eccezioni) state.eccezioni = {};
           salvaState();
           alert("Backup ripristinato!");
         } catch { alert("File non valido."); }
@@ -883,7 +1108,6 @@
       alert("Dati ripristinati!");
     }
 
-    // Aggiornamento automatico data e saldi quando riapri l'app su iOS
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) { initDates(); aggiornaUI(); }
     });
