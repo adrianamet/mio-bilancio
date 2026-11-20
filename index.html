@@ -7,6 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Bilancio" />
   <title>Bilancio Personale</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --bg: #0f172a;
@@ -16,6 +17,7 @@
       --accent: #38bdf8;
       --green: #22c55e;
       --red: #ef4444;
+      --orange: #f59e0b;
       --border: #334155;
     }
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -23,34 +25,36 @@
       margin: 0; padding: env(safe-area-inset-top) 14px 85px 14px;
       background: var(--bg); color: var(--text);
     }
-    h1 { font-size: 1.35rem; margin: 14px 0 10px; }
-    h2 { font-size: 1.05rem; margin: 0 0 10px; color: var(--accent); }
+    h1 { font-size: 1.3rem; margin: 14px 0 10px; }
+    h2 { font-size: 1rem; margin: 0 0 10px; color: var(--accent); }
     .card {
       background: var(--card); border: 1px solid var(--border);
       border-radius: 14px; padding: 14px; margin-bottom: 14px;
     }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .kpi { background: #0f172a80; padding: 10px; border-radius: 10px; }
-    .kpi span { display: block; font-size: 0.75rem; color: var(--muted); }
-    .kpi strong { font-size: 1.15rem; }
-    label { display: block; font-size: 0.8rem; color: var(--muted); margin: 8px 0 4px; }
+    .kpi { background: #0f172a90; padding: 10px 12px; border-radius: 10px; border: 1px solid #33415566; }
+    .kpi.full { grid-column: span 2; display: flex; justify-content: space-between; align-items: center; background: #0ea5e918; border-color: #38bdf855; }
+    .kpi span { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 2px; }
+    .kpi strong { font-size: 1.12rem; }
+    label { display: block; font-size: 0.78rem; color: var(--muted); margin: 8px 0 4px; }
     input, select, button {
       width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border);
-      background: #0f172a; color: var(--text); font-size: 0.95rem;
+      background: #0f172a; color: var(--text); font-size: 0.92rem;
     }
     button {
       background: var(--accent); color: #0f172a; font-weight: 700; border: none;
-      margin-top: 12px; cursor: pointer;
+      margin-top: 10px; cursor: pointer;
     }
     button.secondary { background: #334155; color: var(--text); }
     button.danger { background: var(--red); color: #fff; }
+    button.small { width: auto; padding: 5px 10px; font-size: 0.75rem; margin-top: 4px; }
     .tabs {
-      position: fixed; bottom: 0; left: 0; right: 0;
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
       display: flex; background: #1e293b; border-top: 1px solid var(--border);
       padding-bottom: env(safe-area-inset-bottom);
     }
     .tab {
-      flex: 1; text-align: center; padding: 12px 4px; font-size: 0.8rem;
+      flex: 1; text-align: center; padding: 11px 4px; font-size: 0.76rem;
       color: var(--muted); cursor: pointer;
     }
     .tab.active { color: var(--accent); font-weight: 700; }
@@ -58,31 +62,62 @@
     .section.active { display: block; }
     .mov-item {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 10px 0; border-bottom: 1px solid var(--border);
+      padding: 10px 0; border-bottom: 1px solid var(--border); gap: 8px;
     }
     .mov-item:last-child { border-bottom: none; }
     .badge {
-      display: inline-block; font-size: 0.7rem; padding: 2px 6px;
-      border-radius: 6px; background: #334155; color: var(--accent); margin-left: 6px;
+      display: inline-block; font-size: 0.68rem; padding: 2px 6px;
+      border-radius: 6px; background: #334155; color: var(--accent); margin-left: 5px;
     }
     .pos { color: var(--green); }
     .neg { color: var(--red); }
-    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-    th, td { padding: 7px 4px; text-align: right; border-bottom: 1px solid var(--border); }
+    .warn { color: var(--orange); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+    th, td { padding: 7px 3px; text-align: right; border-bottom: 1px solid var(--border); }
     th:first-child, td:first-child { text-align: left; }
     .table-wrap { overflow-x: auto; }
+    /* Modal Modifica */
+    .modal-bg {
+      display: none; position: fixed; inset: 0; background: #000000aa;
+      z-index: 100; align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-bg.open { display: flex; }
+    .modal {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 16px; width: 100%; max-width: 420px;
+    }
+    .chart-box { position: relative; height: 260px; width: 100%; margin-bottom: 12px; }
   </style>
 </head>
 <body>
 
-  <!-- SEZIONE 1: DASHBOARD -->
+  <!-- SEZIONE 1: HOME -->
   <div id="sec-dash" class="section active">
-    <h1>📊 Riepilogo Attuale</h1>
+    <h1>📊 I Miei Conti</h1>
     <div class="card grid-2">
-      <div class="kpi"><span>Liquidità (Cassa)</span><strong id="kpi-cassa">0,00 €</strong></div>
-      <div class="kpi"><span>Conto Remunerato</span><strong id="kpi-conto">0,00 €</strong></div>
-      <div class="kpi"><span>Fondo Investimenti</span><strong id="kpi-fondo">0,00 €</strong></div>
-      <div class="kpi"><span>Patrimonio Totale</span><strong id="kpi-totale" class="pos">0,00 €</strong></div>
+      <div class="kpi">
+        <span>🏦 UniCredit (Principale)</span>
+        <strong id="kpi-unicredit">0,00 €</strong>
+      </div>
+      <div class="kpi">
+        <span>📉 Prestiti Residui</span>
+        <strong id="kpi-prestiti" class="warn">0,00 €</strong>
+      </div>
+      <div class="kpi">
+        <span>💶 Conto Remunerato (TR)</span>
+        <strong id="kpi-conto">0,00 €</strong>
+      </div>
+      <div class="kpi">
+        <span>📈 Fondo Investimenti (TR)</span>
+        <strong id="kpi-fondo">0,00 €</strong>
+      </div>
+      <div class="kpi full">
+        <div>
+          <span>💰 Patrimonio Totale (Attivi)</span>
+          <strong id="kpi-totale" class="pos" style="font-size:1.3rem;">0,00 €</strong>
+        </div>
+        <button class="secondary small" style="margin:0;" onclick="apriVistaMese()">📅 Registro Mese</button>
+      </div>
     </div>
 
     <div class="card">
@@ -90,7 +125,7 @@
       <div class="grid-2">
         <div>
           <label>Tipo</label>
-          <select id="m-tipo" onchange="toggleTag()">
+          <select id="m-tipo" onchange="toggleTag('m-tipo','tag-box')">
             <option value="uscita">Uscita / Spesa</option>
             <option value="entrata">Entrata</option>
           </select>
@@ -101,18 +136,19 @@
         </div>
       </div>
       <label>Causale</label>
-      <input type="text" id="m-causale" placeholder="Es. Stipendio, Benzina, Giroconto..." />
+      <input type="text" id="m-causale" placeholder="Es. Stipendio, Benzina, Rata 1..." />
       <div class="grid-2">
         <div>
           <label>Importo (€)</label>
           <input type="number" step="0.01" id="m-importo" placeholder="0.00" />
         </div>
         <div id="tag-box">
-          <label>Tag Patrimonio</label>
+          <label>Destinazione / Tag</label>
           <select id="m-tag">
-            <option value="">Spesa Viva</option>
-            <option value="Versamento Conto">Versamento Conto</option>
-            <option value="Versamento Fondo">Versamento Fondo</option>
+            <option value="">Spesa Viva (UniCredit)</option>
+            <option value="Rata Prestito">Rata Prestito (-Debito)</option>
+            <option value="Versamento Conto">Versamento Conto TR</option>
+            <option value="Versamento Fondo">Versamento Fondo TR</option>
           </select>
         </div>
       </div>
@@ -120,51 +156,84 @@
     </div>
 
     <div class="card">
-      <h2>🕒 Ultimi Movimenti</h2>
-      <div id="lista-movimenti"></div>
+      <h2>🕒 Ultimi 8 Movimenti</h2>
+      <div id="lista-recenti"></div>
     </div>
   </div>
 
-  <!-- SEZIONE 2: PREVISIONI -->
-  <div id="sec-prev" class="section">
-    <h1>🔮 Previsione Futura</h1>
+  <!-- SEZIONE 2: REGISTRO MENSILE (ENTRATE & USCITE + MODIFICA) -->
+  <div id="sec-mesi" class="section">
+    <h1>📅 Gestione Mensile</h1>
     <div class="card">
-      <h2>Parametri di Simulazione Mensile</h2>
-      <label>Proietta fino al mese:</label>
-      <input type="month" id="p-fino" value="2029-08" onchange="calcolaPrevisione()" />
-      <div class="grid-2">
-        <div>
-          <label>Entrate mensili (€)</label>
-          <input type="number" id="p-entrate" value="980" onchange="calcolaPrevisione()" />
-        </div>
-        <div>
-          <label>Spese vive mensili (€)</label>
-          <input type="number" id="p-spese" value="450" onchange="calcolaPrevisione()" />
-        </div>
-        <div>
-          <label>Vers. Conto/mese (€)</label>
-          <input type="number" id="p-conto" value="150" onchange="calcolaPrevisione()" />
-        </div>
-        <div>
-          <label>Vers. Fondo/mese (€)</label>
-          <input type="number" id="p-fondo" value="50" onchange="calcolaPrevisione()" />
-        </div>
+      <label style="margin-top:0;">Seleziona Mese da visualizzare / modificare:</label>
+      <input type="month" id="filtro-mese" onchange="renderMese()" />
+      <div class="grid-2" style="margin-top:10px;">
+        <div class="kpi"><span>Entrate Mese</span><strong id="mese-entrate" class="pos">0,00 €</strong></div>
+        <div class="kpi"><span>Uscite Mese</span><strong id="mese-uscite" class="neg">0,00 €</strong></div>
       </div>
-      <button onclick="calcolaPrevisione()">Aggiorna Proiezione</button>
     </div>
 
     <div class="card">
-      <h2>Risultato alla data scelta</h2>
-      <div class="grid-2" style="margin-bottom:12px;">
-        <div class="kpi"><span>Liquidità Stimata</span><strong id="p-res-cassa">0 €</strong></div>
-        <div class="kpi"><span>Patrimonio Totale</span><strong id="p-res-tot" class="pos">0 €</strong></div>
+      <h2 class="pos">⬆️ Entrate del Mese</h2>
+      <div id="lista-mese-entrate"></div>
+    </div>
+
+    <div class="card">
+      <h2 class="neg">⬇️ Uscite del Mese</h2>
+      <div id="lista-mese-uscite"></div>
+    </div>
+  </div>
+
+  <!-- SEZIONE 3: PREVISIONI + GRAFICO -->
+  <div id="sec-prev" class="section">
+    <h1>🔮 Simulazione Portafoglio</h1>
+    <div class="card">
+      <div class="chart-box">
+        <canvas id="graficoPortafoglio"></canvas>
       </div>
+      <div class="grid-2">
+        <div class="kpi"><span>Patrimonio Stimato</span><strong id="p-res-tot" class="pos">0 €</strong></div>
+        <div class="kpi"><span>Prestiti Residui</span><strong id="p-res-prest" class="warn">0 €</strong></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Parametri Mensili Futuri</h2>
+      <label>Proietta fino al mese:</label>
+      <input type="month" id="p-fino" value="2028-12" onchange="calcolaPrevisione()" />
+      <div class="grid-2">
+        <div>
+          <label>Entrate/mese (€)</label>
+          <input type="number" id="p-entrate" value="980" onchange="calcolaPrevisione()" />
+        </div>
+        <div>
+          <label>Spese vive/mese (€)</label>
+          <input type="number" id="p-spese" value="400" onchange="calcolaPrevisione()" />
+        </div>
+        <div>
+          <label>Rate prestiti/mese (€)</label>
+          <input type="number" id="p-rate" value="144.30" step="0.01" onchange="calcolaPrevisione()" />
+        </div>
+        <div>
+          <label>Vers. Conto TR/mese (€)</label>
+          <input type="number" id="p-conto" value="150" onchange="calcolaPrevisione()" />
+        </div>
+        <div>
+          <label>Vers. Fondo TR/mese (€)</label>
+          <input type="number" id="p-fondo" value="50" onchange="calcolaPrevisione()" />
+        </div>
+      </div>
+      <button onclick="calcolaPrevisione()">Aggiorna Grafico</button>
+    </div>
+
+    <div class="card">
+      <h2>Dettaglio Mese per Mese</h2>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>Mese</th>
-              <th>Cassa</th>
+              <th>UniCr.</th>
               <th>Conto</th>
               <th>Fondo</th>
               <th>Totale</th>
@@ -176,22 +245,26 @@
     </div>
   </div>
 
-  <!-- SEZIONE 3: IMPOSTAZIONI & BACKUP -->
+  <!-- SEZIONE 4: IMPOSTAZIONI -->
   <div id="sec-set" class="section">
     <h1>⚙️ Impostazioni & Backup</h1>
     <div class="card">
-      <h2>Saldi Iniziali e Tassi (come il tuo Excel)</h2>
+      <h2>Saldi Iniziali (al 20/11/2026)</h2>
       <div class="grid-2">
         <div>
-          <label>Cassa Iniziale (€)</label>
-          <input type="number" step="0.01" id="s-cassa" />
+          <label>UniCredit (€)</label>
+          <input type="number" step="0.01" id="s-unicredit" />
         </div>
         <div>
-          <label>Conto Iniziale (€)</label>
+          <label>Prestiti Residui (€)</label>
+          <input type="number" step="0.01" id="s-prestiti" />
+        </div>
+        <div>
+          <label>Conto TR (€)</label>
           <input type="number" step="0.01" id="s-conto" />
         </div>
         <div>
-          <label>Fondo Iniziale (€)</label>
+          <label>Fondo TR (€)</label>
           <input type="number" step="0.01" id="s-fondo" />
         </div>
         <div>
@@ -207,38 +280,83 @@
     </div>
 
     <div class="card">
-      <h2>💾 Backup Dati (Sicurezza)</h2>
-      <p style="font-size:0.8rem; color:var(--muted); margin-top:0;">
-        I dati vivono solo su questo dispositivo. Esporta ogni tanto un file di backup.
-      </p>
+      <h2>💾 Backup Dati</h2>
       <button class="secondary" onclick="esportaDati()">Esporta Backup (.json)</button>
       <label style="margin-top:12px;">Ripristina da Backup:</label>
       <input type="file" accept=".json" onchange="importaDati(event)" />
-      <button class="danger" onclick="resetDati()">Cancella tutti i dati</button>
+      <button class="danger" onclick="resetDati()">Cancella tutti i movimenti</button>
+    </div>
+  </div>
+
+  <!-- MODAL MODIFICA MOVIMENTO -->
+  <div id="modal-edit" class="modal-bg">
+    <div class="modal">
+      <h2>✏️ Modifica Movimento</h2>
+      <input type="hidden" id="e-id" />
+      <div class="grid-2">
+        <div>
+          <label>Tipo</label>
+          <select id="e-tipo" onchange="toggleTag('e-tipo','e-tag-box')">
+            <option value="uscita">Uscita / Spesa</option>
+            <option value="entrata">Entrata</option>
+          </select>
+        </div>
+        <div>
+          <label>Data</label>
+          <input type="date" id="e-data" />
+        </div>
+      </div>
+      <label>Causale</label>
+      <input type="text" id="e-causale" />
+      <div class="grid-2">
+        <div>
+          <label>Importo (€)</label>
+          <input type="number" step="0.01" id="e-importo" />
+        </div>
+        <div id="e-tag-box">
+          <label>Tag</label>
+          <select id="e-tag">
+            <option value="">Spesa Viva</option>
+            <option value="Rata Prestito">Rata Prestito</option>
+            <option value="Versamento Conto">Versamento Conto TR</option>
+            <option value="Versamento Fondo">Versamento Fondo TR</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-top:6px;">
+        <button class="secondary" onclick="chiudiModal()">Annulla</button>
+        <button onclick="salvaModifica()">Salva</button>
+      </div>
     </div>
   </div>
 
   <!-- BARRA DI NAVIGAZIONE -->
   <div class="tabs">
-    <div class="tab active" onclick="cambiaTab('dash', this)">🏠 Home</div>
-    <div class="tab" onclick="cambiaTab('prev', this)">🔮 Previsioni</div>
-    <div class="tab" onclick="cambiaTab('set', this)">⚙️ Impostazioni</div>
+    <div class="tab active" id="tab-dash" onclick="cambiaTab('dash')">🏠 Home</div>
+    <div class="tab" id="tab-mesi" onclick="cambiaTab('mesi')">📅 Mesi</div>
+    <div class="tab" id="tab-prev" onclick="cambiaTab('prev')">🔮 Grafico</div>
+    <div class="tab" id="tab-set" onclick="cambiaTab('set')">⚙️ Setup</div>
   </div>
 
   <script>
-    const STORAGE_KEY = "bilancio_personale_v1";
+    const STORAGE_KEY = "bilancio_personale_v2";
+    let chartInstance = null;
+
     let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
       settings: {
-        cassaIniziale: 540.70,
-        contoIniziale: 171.16,
-        fondoIniziale: 647.14,
+        unicreditIniziale: 274.14,
+        prestitiIniziali: 4430.70,
+        contoIniziale: 731.49,
+        fondoIniziale: 648.01,
         tassoConto: 2.5,
         tassoFondo: 7.0
       },
       movimenti: []
     };
 
-    document.getElementById("m-data").valueAsDate = new Date();
+    const today = new Date();
+    document.getElementById("m-data").valueAsDate = today;
+    document.getElementById("filtro-mese").value = today.toISOString().slice(0, 7);
 
     function salvaState() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -249,17 +367,22 @@
       return n.toLocaleString("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
     }
 
-    function toggleTag() {
-      const tipo = document.getElementById("m-tipo").value;
-      document.getElementById("tag-box").style.display = tipo === "uscita" ? "block" : "none";
+    function toggleTag(selectId, boxId) {
+      const tipo = document.getElementById(selectId).value;
+      document.getElementById(boxId).style.display = tipo === "uscita" ? "block" : "none";
     }
 
-    function cambiaTab(id, el) {
+    function cambiaTab(id) {
       document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
       document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
       document.getElementById("sec-" + id).classList.add("active");
-      el.classList.add("active");
+      document.getElementById("tab-" + id).classList.add("active");
+      if (id === "mesi") renderMese();
       if (id === "prev") calcolaPrevisione();
+    }
+
+    function apriVistaMese() {
+      cambiaTab("mesi");
     }
 
     function aggiungiMovimento() {
@@ -278,57 +401,125 @@
       salvaState();
     }
 
+    function apriModifica(id) {
+      const m = state.movimenti.find(x => x.id === id);
+      if (!m) return;
+      document.getElementById("e-id").value = m.id;
+      document.getElementById("e-tipo").value = m.tipo;
+      document.getElementById("e-data").value = m.data;
+      document.getElementById("e-causale").value = m.causale;
+      document.getElementById("e-importo").value = m.importo;
+      document.getElementById("e-tag").value = m.tag || "";
+      toggleTag("e-tipo", "e-tag-box");
+      document.getElementById("modal-edit").classList.add("open");
+    }
+
+    function chiudiModal() {
+      document.getElementById("modal-edit").classList.remove("open");
+    }
+
+    function salvaModifica() {
+      const id = Number(document.getElementById("e-id").value);
+      const idx = state.movimenti.findIndex(x => x.id === id);
+      if (idx === -1) return;
+      const tipo = document.getElementById("e-tipo").value;
+      const importo = parseFloat(document.getElementById("e-importo").value);
+      if (isNaN(importo) || importo <= 0) return alert("Importo non valido.");
+
+      state.movimenti[idx] = {
+        id,
+        tipo,
+        data: document.getElementById("e-data").value,
+        causale: document.getElementById("e-causale").value.trim() || "Movimento",
+        importo,
+        tag: tipo === "uscita" ? document.getElementById("e-tag").value : ""
+      };
+      state.movimenti.sort((a, b) => b.data.localeCompare(a.data));
+      chiudiModal();
+      salvaState();
+      renderMese();
+    }
+
     function eliminaMovimento(id) {
       if (!confirm("Eliminare questo movimento?")) return;
       state.movimenti = state.movimenti.filter(m => m.id !== id);
       salvaState();
+      renderMese();
     }
 
     function calcolaSaldiAttuali() {
-      let cassa = state.settings.cassaIniziale;
+      let unicredit = state.settings.unicreditIniziale;
+      let prestiti = state.settings.prestitiIniziali;
       let conto = state.settings.contoIniziale;
       let fondo = state.settings.fondoIniziale;
 
       state.movimenti.forEach(m => {
         if (m.tipo === "entrata") {
-          cassa += m.importo;
+          unicredit += m.importo;
         } else {
-          cassa -= m.importo;
+          unicredit -= m.importo;
           if (m.tag === "Versamento Conto") conto += m.importo;
           if (m.tag === "Versamento Fondo") fondo += m.importo;
+          if (m.tag === "Rata Prestito") prestiti = Math.max(0, prestiti - m.importo);
         }
       });
-      return { cassa, conto, fondo, totale: cassa + conto + fondo };
+      return { unicredit, prestiti, conto, fondo, totale: unicredit + conto + fondo };
+    }
+
+    function htmlMovimento(m) {
+      return `
+        <div class="mov-item">
+          <div>
+            <strong>${m.causale}</strong>${m.tag ? `<span class="badge">${m.tag}</span>` : ""}
+            <div style="font-size:0.74rem;color:var(--muted);">${m.data}</div>
+          </div>
+          <div style="text-align:right;">
+            <strong class="${m.tipo === 'entrata' ? 'pos' : 'neg'}">
+              ${m.tipo === 'entrata' ? '+' : '-'}${fmt(m.importo)}
+            </strong>
+            <div style="margin-top:3px;font-size:0.74rem;">
+              <span onclick="apriModifica(${m.id})" style="color:var(--accent);cursor:pointer;margin-right:10px;">✏️ Modifica</span>
+              <span onclick="eliminaMovimento(${m.id})" style="color:var(--muted);cursor:pointer;">🗑️</span>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function renderMese() {
+      const mese = document.getElementById("filtro-mese").value;
+      const filtrati = state.movimenti.filter(m => m.data.startsWith(mese));
+      const entrate = filtrati.filter(m => m.tipo === "entrata");
+      const uscite = filtrati.filter(m => m.tipo === "uscita");
+
+      const totE = entrate.reduce((s, m) => s + m.importo, 0);
+      const totU = uscite.reduce((s, m) => s + m.importo, 0);
+      document.getElementById("mese-entrate").textContent = fmt(totE);
+      document.getElementById("mese-uscite").textContent = fmt(totU);
+
+      document.getElementById("lista-mese-entrate").innerHTML = entrate.length
+        ? entrate.map(htmlMovimento).join("")
+        : `<p style="color:var(--muted);font-size:0.82rem;margin:0;">Nessuna entrata in questo mese.</p>`;
+
+      document.getElementById("lista-mese-uscite").innerHTML = uscite.length
+        ? uscite.map(htmlMovimento).join("")
+        : `<p style="color:var(--muted);font-size:0.82rem;margin:0;">Nessuna uscita in questo mese.</p>`;
     }
 
     function aggiornaUI() {
       const s = calcolaSaldiAttuali();
-      document.getElementById("kpi-cassa").textContent = fmt(s.cassa);
+      document.getElementById("kpi-unicredit").textContent = fmt(s.unicredit);
+      document.getElementById("kpi-prestiti").textContent = fmt(s.prestiti);
       document.getElementById("kpi-conto").textContent = fmt(s.conto);
       document.getElementById("kpi-fondo").textContent = fmt(s.fondo);
       document.getElementById("kpi-totale").textContent = fmt(s.totale);
 
-      const lista = document.getElementById("lista-movimenti");
-      if (state.movimenti.length === 0) {
-        lista.innerHTML = `<p style="color:var(--muted);font-size:0.85rem;">Nessun movimento registrato.</p>`;
-      } else {
-        lista.innerHTML = state.movimenti.slice(0, 30).map(m => `
-          <div class="mov-item">
-            <div>
-              <strong>${m.causale}</strong>${m.tag ? `<span class="badge">${m.tag}</span>` : ""}
-              <div style="font-size:0.75rem;color:var(--muted);">${m.data}</div>
-            </div>
-            <div style="text-align:right;">
-              <strong class="${m.tipo === 'entrata' ? 'pos' : 'neg'}">
-                ${m.tipo === 'entrata' ? '+' : '-'}${fmt(m.importo)}
-              </strong>
-              <div onclick="eliminaMovimento(${m.id})" style="font-size:0.72rem;color:var(--muted);cursor:pointer;margin-top:2px;">Elimina</div>
-            </div>
-          </div>
-        `).join("");
-      }
+      const lista = document.getElementById("lista-recenti");
+      lista.innerHTML = state.movimenti.length
+        ? state.movimenti.slice(0, 8).map(htmlMovimento).join("")
+        : `<p style="color:var(--muted);font-size:0.84rem;margin:0;">Nessun movimento registrato.</p>`;
 
-      document.getElementById("s-cassa").value = state.settings.cassaIniziale;
+      document.getElementById("s-unicredit").value = state.settings.unicreditIniziale;
+      document.getElementById("s-prestiti").value = state.settings.prestitiIniziali;
       document.getElementById("s-conto").value = state.settings.contoIniziale;
       document.getElementById("s-fondo").value = state.settings.fondoIniziale;
       document.getElementById("s-tasso-conto").value = state.settings.tassoConto;
@@ -342,50 +533,86 @@
 
       const entrate = parseFloat(document.getElementById("p-entrate").value) || 0;
       const spese = parseFloat(document.getElementById("p-spese").value) || 0;
+      const rate = parseFloat(document.getElementById("p-rate").value) || 0;
       const vConto = parseFloat(document.getElementById("p-conto").value) || 0;
       const vFondo = parseFloat(document.getElementById("p-fondo").value) || 0;
 
       const attuali = calcolaSaldiAttuali();
-      let cassa = attuali.cassa;
+      let uni = attuali.unicredit;
+      let prest = attuali.prestiti;
       let conto = attuali.conto;
       let fondo = attuali.fondo;
 
-      const rateContoMensile = (state.settings.tassoConto / 100 / 12) * (1 - 0.26);
-      const rateFondoMensile = Math.pow(1 + state.settings.tassoFondo / 100, 1 / 12) - 1;
+      const rateContoM = (state.settings.tassoConto / 100 / 12) * (1 - 0.26);
+      const rateFondoM = Math.pow(1 + state.settings.tassoFondo / 100, 1 / 12) - 1;
 
       const now = new Date();
       let curYear = now.getFullYear();
       let curMonth = now.getMonth() + 1;
 
-      let rows = "";
-      let safety = 0;
-      while ((curYear < tYear || (curYear === tYear && curMonth <= tMonth)) && safety < 360) {
-        safety++;
-        cassa = cassa + entrate - spese - vConto - vFondo;
-        conto = conto + (conto * rateContoMensile) + vConto;
-        fondo = fondo + (fondo * rateFondoMensile) + vFondo;
-        const tot = cassa + conto + fondo;
+      let labels = [], dTot = [], dFondo = [], dConto = [], dPrest = [];
+      let rows = "", safety = 0;
 
-        const label = String(curMonth).padStart(2, "0") + "/" + curYear;
+      while ((curYear < tYear || (curYear === tYear && curMonth <= tMonth)) && safety < 240) {
+        safety++;
+        const rataEffettiva = prest > 0 ? Math.min(rate, prest) : 0;
+        prest = Math.max(0, prest - rataEffettiva);
+        uni = uni + entrate - spese - rataEffettiva - vConto - vFondo;
+        conto = conto + (conto * rateContoM) + vConto;
+        fondo = fondo + (fondo * rateFondoM) + vFondo;
+        const tot = uni + conto + fondo;
+
+        const label = String(curMonth).padStart(2, "0") + "/" + String(curYear).slice(2);
+        labels.push(label);
+        dTot.push(Math.round(tot));
+        dFondo.push(Math.round(fondo));
+        dConto.push(Math.round(conto));
+        dPrest.push(Math.round(prest));
+
         rows += `<tr>
           <td>${label}</td>
-          <td>${Math.round(cassa)} €</td>
-          <td>${Math.round(conto)} €</td>
-          <td>${Math.round(fondo)} €</td>
-          <td><strong>${Math.round(tot)} €</strong></td>
+          <td>${Math.round(uni)}€</td>
+          <td>${Math.round(conto)}€</td>
+          <td>${Math.round(fondo)}€</td>
+          <td><strong>${Math.round(tot)}€</strong></td>
         </tr>`;
 
         curMonth++;
         if (curMonth > 12) { curMonth = 1; curYear++; }
       }
 
-      document.getElementById("p-res-cassa").textContent = fmt(cassa);
-      document.getElementById("p-res-tot").textContent = fmt(cassa + conto + fondo);
+      document.getElementById("p-res-tot").textContent = fmt(uni + conto + fondo);
+      document.getElementById("p-res-prest").textContent = fmt(prest);
       document.getElementById("tab-previsione").innerHTML = rows;
+
+      const ctx = document.getElementById("graficoPortafoglio").getContext("2d");
+      if (chartInstance) chartInstance.destroy();
+      chartInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            { label: "Patrimonio Totale", data: dTot, borderColor: "#22c55e", backgroundColor: "#22c55e22", fill: true, tension: 0.3 },
+            { label: "Conto TR", data: dConto, borderColor: "#38bdf8", tension: 0.3 },
+            { label: "Fondo TR", data: dFondo, borderColor: "#a855f7", tension: 0.3 },
+            { label: "Prestito Residuo", data: dPrest, borderColor: "#f59e0b", borderDash: [5, 5], tension: 0.3 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: "#cbd5e1", font: { size: 10 } } } },
+          scales: {
+            x: { ticks: { color: "#94a3b8", font: { size: 10 } }, grid: { color: "#33415544" } },
+            y: { ticks: { color: "#94a3b8", font: { size: 10 } }, grid: { color: "#33415544" } }
+          }
+        }
+      });
     }
 
     function salvaImpostazioni() {
-      state.settings.cassaIniziale = parseFloat(document.getElementById("s-cassa").value) || 0;
+      state.settings.unicreditIniziale = parseFloat(document.getElementById("s-unicredit").value) || 0;
+      state.settings.prestitiIniziali = parseFloat(document.getElementById("s-prestiti").value) || 0;
       state.settings.contoIniziale = parseFloat(document.getElementById("s-conto").value) || 0;
       state.settings.fondoIniziale = parseFloat(document.getElementById("s-fondo").value) || 0;
       state.settings.tassoConto = parseFloat(document.getElementById("s-tasso-conto").value) || 0;
