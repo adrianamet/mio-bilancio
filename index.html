@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Bilancio" />
+  <title>Bilancio Personale</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --green: #22c55e;
+      --red: #ef4444;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body {
+      margin: 0; padding: env(safe-area-inset-top) 14px 85px 14px;
+      background: var(--bg); color: var(--text);
+    }
+    h1 { font-size: 1.35rem; margin: 14px 0 10px; }
+    h2 { font-size: 1.05rem; margin: 0 0 10px; color: var(--accent); }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px; margin-bottom: 14px;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .kpi { background: #0f172a80; padding: 10px; border-radius: 10px; }
+    .kpi span { display: block; font-size: 0.75rem; color: var(--muted); }
+    .kpi strong { font-size: 1.15rem; }
+    label { display: block; font-size: 0.8rem; color: var(--muted); margin: 8px 0 4px; }
+    input, select, button {
+      width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border);
+      background: #0f172a; color: var(--text); font-size: 0.95rem;
+    }
+    button {
+      background: var(--accent); color: #0f172a; font-weight: 700; border: none;
+      margin-top: 12px; cursor: pointer;
+    }
+    button.secondary { background: #334155; color: var(--text); }
+    button.danger { background: var(--red); color: #fff; }
+    .tabs {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      display: flex; background: #1e293b; border-top: 1px solid var(--border);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .tab {
+      flex: 1; text-align: center; padding: 12px 4px; font-size: 0.8rem;
+      color: var(--muted); cursor: pointer;
+    }
+    .tab.active { color: var(--accent); font-weight: 700; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .mov-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .mov-item:last-child { border-bottom: none; }
+    .badge {
+      display: inline-block; font-size: 0.7rem; padding: 2px 6px;
+      border-radius: 6px; background: #334155; color: var(--accent); margin-left: 6px;
+    }
+    .pos { color: var(--green); }
+    .neg { color: var(--red); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    th, td { padding: 7px 4px; text-align: right; border-bottom: 1px solid var(--border); }
+    th:first-child, td:first-child { text-align: left; }
+    .table-wrap { overflow-x: auto; }
+  </style>
+</head>
+<body>
+
+  <!-- SEZIONE 1: DASHBOARD -->
+  <div id="sec-dash" class="section active">
+    <h1>📊 Riepilogo Attuale</h1>
+    <div class="card grid-2">
+      <div class="kpi"><span>Liquidità (Cassa)</span><strong id="kpi-cassa">0,00 €</strong></div>
+      <div class="kpi"><span>Conto Remunerato</span><strong id="kpi-conto">0,00 €</strong></div>
+      <div class="kpi"><span>Fondo Investimenti</span><strong id="kpi-fondo">0,00 €</strong></div>
+      <div class="kpi"><span>Patrimonio Totale</span><strong id="kpi-totale" class="pos">0,00 €</strong></div>
+    </div>
+
+    <div class="card">
+      <h2>➕ Nuovo Movimento</h2>
+      <div class="grid-2">
+        <div>
+          <label>Tipo</label>
+          <select id="m-tipo" onchange="toggleTag()">
+            <option value="uscita">Uscita / Spesa</option>
+            <option value="entrata">Entrata</option>
+          </select>
+        </div>
+        <div>
+          <label>Data</label>
+          <input type="date" id="m-data" />
+        </div>
+      </div>
+      <label>Causale</label>
+      <input type="text" id="m-causale" placeholder="Es. Stipendio, Benzina, Giroconto..." />
+      <div class="grid-2">
+        <div>
+          <label>Importo (€)</label>
+          <input type="number" step="0.01" id="m-importo" placeholder="0.00" />
+        </div>
+        <div id="tag-box">
+          <label>Tag Patrimonio</label>
+          <select id="m-tag">
+            <option value="">Spesa Viva</option>
+            <option value="Versamento Conto">Versamento Conto</option>
+            <option value="Versamento Fondo">Versamento Fondo</option>
+          </select>
+        </div>
+      </div>
+      <button onclick="aggiungiMovimento()">Salva Movimento</button>
+    </div>
+
+    <div class="card">
+      <h2>🕒 Ultimi Movimenti</h2>
+      <div id="lista-movimenti"></div>
+    </div>
+  </div>
+
+  <!-- SEZIONE 2: PREVISIONI -->
+  <div id="sec-prev" class="section">
+    <h1>🔮 Previsione Futura</h1>
+    <div class="card">
+      <h2>Parametri di Simulazione Mensile</h2>
+      <label>Proietta fino al mese:</label>
+      <input type="month" id="p-fino" value="2029-08" onchange="calcolaPrevisione()" />
+      <div class="grid-2">
+        <div>
+          <label>Entrate mensili (€)</label>
+          <input type="number" id="p-entrate" value="980" onchange="calcolaPrevisione()" />
+        </div>
+        <div>
+          <label>Spese vive mensili (€)</label>
+          <input type="number" id="p-spese" value="450" onchange="calcolaPrevisione()" />
+        </div>
+        <div>
+          <label>Vers. Conto/mese (€)</label>
+          <input type="number" id="p-conto" value="150" onchange="calcolaPrevisione()" />
+        </div>
+        <div>
+          <label>Vers. Fondo/mese (€)</label>
+          <input type="number" id="p-fondo" value="50" onchange="calcolaPrevisione()" />
+        </div>
+      </div>
+      <button onclick="calcolaPrevisione()">Aggiorna Proiezione</button>
+    </div>
+
+    <div class="card">
+      <h2>Risultato alla data scelta</h2>
+      <div class="grid-2" style="margin-bottom:12px;">
+        <div class="kpi"><span>Liquidità Stimata</span><strong id="p-res-cassa">0 €</strong></div>
+        <div class="kpi"><span>Patrimonio Totale</span><strong id="p-res-tot" class="pos">0 €</strong></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Mese</th>
+              <th>Cassa</th>
+              <th>Conto</th>
+              <th>Fondo</th>
+              <th>Totale</th>
+            </tr>
+          </thead>
+          <tbody id="tab-previsione"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEZIONE 3: IMPOSTAZIONI & BACKUP -->
+  <div id="sec-set" class="section">
+    <h1>⚙️ Impostazioni & Backup</h1>
+    <div class="card">
+      <h2>Saldi Iniziali e Tassi (come il tuo Excel)</h2>
+      <div class="grid-2">
+        <div>
+          <label>Cassa Iniziale (€)</label>
+          <input type="number" step="0.01" id="s-cassa" />
+        </div>
+        <div>
+          <label>Conto Iniziale (€)</label>
+          <input type="number" step="0.01" id="s-conto" />
+        </div>
+        <div>
+          <label>Fondo Iniziale (€)</label>
+          <input type="number" step="0.01" id="s-fondo" />
+        </div>
+        <div>
+          <label>Tasso Conto (% lordo)</label>
+          <input type="number" step="0.1" id="s-tasso-conto" />
+        </div>
+        <div>
+          <label>Tasso Fondo (% annuo)</label>
+          <input type="number" step="0.1" id="s-tasso-fondo" />
+        </div>
+      </div>
+      <button onclick="salvaImpostazioni()">Salva Impostazioni</button>
+    </div>
+
+    <div class="card">
+      <h2>💾 Backup Dati (Sicurezza)</h2>
+      <p style="font-size:0.8rem; color:var(--muted); margin-top:0;">
+        I dati vivono solo su questo dispositivo. Esporta ogni tanto un file di backup.
+      </p>
+      <button class="secondary" onclick="esportaDati()">Esporta Backup (.json)</button>
+      <label style="margin-top:12px;">Ripristina da Backup:</label>
+      <input type="file" accept=".json" onchange="importaDati(event)" />
+      <button class="danger" onclick="resetDati()">Cancella tutti i dati</button>
+    </div>
+  </div>
+
+  <!-- BARRA DI NAVIGAZIONE -->
+  <div class="tabs">
+    <div class="tab active" onclick="cambiaTab('dash', this)">🏠 Home</div>
+    <div class="tab" onclick="cambiaTab('prev', this)">🔮 Previsioni</div>
+    <div class="tab" onclick="cambiaTab('set', this)">⚙️ Impostazioni</div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "bilancio_personale_v1";
+    let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+      settings: {
+        cassaIniziale: 540.70,
+        contoIniziale: 171.16,
+        fondoIniziale: 647.14,
+        tassoConto: 2.5,
+        tassoFondo: 7.0
+      },
+      movimenti: []
+    };
+
+    document.getElementById("m-data").valueAsDate = new Date();
+
+    function salvaState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      aggiornaUI();
+    }
+
+    function fmt(n) {
+      return n.toLocaleString("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+    }
+
+    function toggleTag() {
+      const tipo = document.getElementById("m-tipo").value;
+      document.getElementById("tag-box").style.display = tipo === "uscita" ? "block" : "none";
+    }
+
+    function cambiaTab(id, el) {
+      document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.getElementById("sec-" + id).classList.add("active");
+      el.classList.add("active");
+      if (id === "prev") calcolaPrevisione();
+    }
+
+    function aggiungiMovimento() {
+      const tipo = document.getElementById("m-tipo").value;
+      const data = document.getElementById("m-data").value;
+      const causale = document.getElementById("m-causale").value.trim() || (tipo === "entrata" ? "Entrata" : "Spesa");
+      const importo = parseFloat(document.getElementById("m-importo").value);
+      const tag = tipo === "uscita" ? document.getElementById("m-tag").value : "";
+
+      if (!data || isNaN(importo) || importo <= 0) return alert("Inserisci data e importo valido.");
+
+      state.movimenti.push({ id: Date.now(), tipo, data, causale, importo, tag });
+      state.movimenti.sort((a, b) => b.data.localeCompare(a.data));
+      document.getElementById("m-causale").value = "";
+      document.getElementById("m-importo").value = "";
+      salvaState();
+    }
+
+    function eliminaMovimento(id) {
+      if (!confirm("Eliminare questo movimento?")) return;
+      state.movimenti = state.movimenti.filter(m => m.id !== id);
+      salvaState();
+    }
+
+    function calcolaSaldiAttuali() {
+      let cassa = state.settings.cassaIniziale;
+      let conto = state.settings.contoIniziale;
+      let fondo = state.settings.fondoIniziale;
+
+      state.movimenti.forEach(m => {
+        if (m.tipo === "entrata") {
+          cassa += m.importo;
+        } else {
+          cassa -= m.importo;
+          if (m.tag === "Versamento Conto") conto += m.importo;
+          if (m.tag === "Versamento Fondo") fondo += m.importo;
+        }
+      });
+      return { cassa, conto, fondo, totale: cassa + conto + fondo };
+    }
+
+    function aggiornaUI() {
+      const s = calcolaSaldiAttuali();
+      document.getElementById("kpi-cassa").textContent = fmt(s.cassa);
+      document.getElementById("kpi-conto").textContent = fmt(s.conto);
+      document.getElementById("kpi-fondo").textContent = fmt(s.fondo);
+      document.getElementById("kpi-totale").textContent = fmt(s.totale);
+
+      const lista = document.getElementById("lista-movimenti");
+      if (state.movimenti.length === 0) {
+        lista.innerHTML = `<p style="color:var(--muted);font-size:0.85rem;">Nessun movimento registrato.</p>`;
+      } else {
+        lista.innerHTML = state.movimenti.slice(0, 30).map(m => `
+          <div class="mov-item">
+            <div>
+              <strong>${m.causale}</strong>${m.tag ? `<span class="badge">${m.tag}</span>` : ""}
+              <div style="font-size:0.75rem;color:var(--muted);">${m.data}</div>
+            </div>
+            <div style="text-align:right;">
+              <strong class="${m.tipo === 'entrata' ? 'pos' : 'neg'}">
+                ${m.tipo === 'entrata' ? '+' : '-'}${fmt(m.importo)}
+              </strong>
+              <div onclick="eliminaMovimento(${m.id})" style="font-size:0.72rem;color:var(--muted);cursor:pointer;margin-top:2px;">Elimina</div>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      document.getElementById("s-cassa").value = state.settings.cassaIniziale;
+      document.getElementById("s-conto").value = state.settings.contoIniziale;
+      document.getElementById("s-fondo").value = state.settings.fondoIniziale;
+      document.getElementById("s-tasso-conto").value = state.settings.tassoConto;
+      document.getElementById("s-tasso-fondo").value = state.settings.tassoFondo;
+    }
+
+    function calcolaPrevisione() {
+      const targetStr = document.getElementById("p-fino").value;
+      if (!targetStr) return;
+      const [tYear, tMonth] = targetStr.split("-").map(Number);
+
+      const entrate = parseFloat(document.getElementById("p-entrate").value) || 0;
+      const spese = parseFloat(document.getElementById("p-spese").value) || 0;
+      const vConto = parseFloat(document.getElementById("p-conto").value) || 0;
+      const vFondo = parseFloat(document.getElementById("p-fondo").value) || 0;
+
+      const attuali = calcolaSaldiAttuali();
+      let cassa = attuali.cassa;
+      let conto = attuali.conto;
+      let fondo = attuali.fondo;
+
+      const rateContoMensile = (state.settings.tassoConto / 100 / 12) * (1 - 0.26);
+      const rateFondoMensile = Math.pow(1 + state.settings.tassoFondo / 100, 1 / 12) - 1;
+
+      const now = new Date();
+      let curYear = now.getFullYear();
+      let curMonth = now.getMonth() + 1;
+
+      let rows = "";
+      let safety = 0;
+      while ((curYear < tYear || (curYear === tYear && curMonth <= tMonth)) && safety < 360) {
+        safety++;
+        cassa = cassa + entrate - spese - vConto - vFondo;
+        conto = conto + (conto * rateContoMensile) + vConto;
+        fondo = fondo + (fondo * rateFondoMensile) + vFondo;
+        const tot = cassa + conto + fondo;
+
+        const label = String(curMonth).padStart(2, "0") + "/" + curYear;
+        rows += `<tr>
+          <td>${label}</td>
+          <td>${Math.round(cassa)} €</td>
+          <td>${Math.round(conto)} €</td>
+          <td>${Math.round(fondo)} €</td>
+          <td><strong>${Math.round(tot)} €</strong></td>
+        </tr>`;
+
+        curMonth++;
+        if (curMonth > 12) { curMonth = 1; curYear++; }
+      }
+
+      document.getElementById("p-res-cassa").textContent = fmt(cassa);
+      document.getElementById("p-res-tot").textContent = fmt(cassa + conto + fondo);
+      document.getElementById("tab-previsione").innerHTML = rows;
+    }
+
+    function salvaImpostazioni() {
+      state.settings.cassaIniziale = parseFloat(document.getElementById("s-cassa").value) || 0;
+      state.settings.contoIniziale = parseFloat(document.getElementById("s-conto").value) || 0;
+      state.settings.fondoIniziale = parseFloat(document.getElementById("s-fondo").value) || 0;
+      state.settings.tassoConto = parseFloat(document.getElementById("s-tasso-conto").value) || 0;
+      state.settings.tassoFondo = parseFloat(document.getElementById("s-tasso-fondo").value) || 0;
+      salvaState();
+      alert("Impostazioni salvate!");
+    }
+
+    function esportaDati() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "backup_bilancio.json";
+      a.click();
+    }
+
+    function importaDati(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          state = JSON.parse(ev.target.result);
+          salvaState();
+          alert("Backup ripristinato!");
+        } catch { alert("File non valido."); }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetDati() {
+      if (!confirm("Sicuro di voler cancellare tutti i movimenti?")) return;
+      state.movimenti = [];
+      salvaState();
+    }
+
+    aggiornaUI();
+  </script>
+</body>
+</html>
